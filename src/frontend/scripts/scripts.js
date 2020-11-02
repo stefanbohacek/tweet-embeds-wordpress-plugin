@@ -77,7 +77,7 @@ const ftfHelpers = {
                 }
 
                 if ( media.type === 'animated_gif' ){
-                    tweetText += `<video class="w-100 mt-0" controls><source src="${ media.preview_image_url.replace( 'pbs.twimg.com/tweet_video_thumb', 'video.twimg.com/tweet_video' ).replace( '.jpg', '.mp4').replace( '.png', '.mp4') }" type="video/mp4"></video>`
+                    tweetText += `<video class="w-100 mt-0" controls loop><source src="${ media.preview_image_url.replace( 'pbs.twimg.com/tweet_video_thumb', 'video.twimg.com/tweet_video' ).replace( '.jpg', '.mp4').replace( '.png', '.mp4') }" type="video/mp4"></video>`
                 } else if ( media.type === 'video' ){
                     /* TODO: Video URLs not being passed in Twitter API v2.
                        https://twittercommunity.com/t/how-do-i-get-the-video-url-in-recent-search/141896
