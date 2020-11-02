@@ -1,0 +1,44 @@
+{
+    "name": "ftf-alt-embed-tweet",
+    "version": "1.1.0",
+    "private": true,
+    "description": "Example: Editable (ESNext).",
+    "author": "The WordPress Contributors",
+    "license": "GPL-2.0-or-later",
+    "keywords": [
+        "WordPress",
+        "block"
+    ],
+    "homepage": "https://github.com/fourtonfish/ftf-dataviz/",
+    "repository": "git+https://github.com/fourtonfish/ftf-dataviz.git",
+    "bugs": {
+        "url": "https://github.com/fourtonfish/ftf-dataviz/issues"
+    },
+    "main": "build/index.js",
+    "devDependencies": {
+        "@babel/core": "^7.10.2",
+        "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+        "@babel/preset-env": "^7.10.2",
+        "babelify": "^10.0.0",
+        "browser-sync": "^2.18.12",
+        "browserify": "^14.4.0",
+        "gulp": "^3.9.1",
+        "gulp-autoprefixer": "^4.0.0",
+        "gulp-babel": "^8.0.0",
+        "gulp-clean": "^0.3.2",
+        "gulp-concat": "^2.6.1",
+        "gulp-jshint": "^2.0.4",
+        "gulp-less": "^3.3.2",
+        "gulp-minify-css": "^1.2.4",
+        "gulp-notify": "^3.0.0",
+        "gulp-rename": "^1.2.2",
+        "gulp-sass": "^3.1.0",
+        "gulp-sourcemaps": "^2.6.4",
+        "gulp-streamify": "^1.0.2",
+        "gulp-uglify": "^3.0.0",
+        "gulp-util": "^3.0.8",
+        "jshint": "^2.9.5",
+        "jshint-stylish": "^2.2.1",
+        "vinyl-source-stream": "^1.1.0"
+    }
+}
