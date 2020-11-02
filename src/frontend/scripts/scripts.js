@@ -20,7 +20,7 @@ const ftfHelpers = {
 
             if ( data.users[0].profile_image_url ){
                 renderedTweetHTML += `<div class="col-2 col-sm-1 col-md-1">
-                    <a href="https://twitter.com/${ data.users[0].username }" class="text-decoration-none"><img class="rounded-circle border" width="48" height="48" src="${ data.users[0].profile_image_url }"></a>
+                    <a href="https://twitter.com/${ data.users[0].username }" class="text-decoration-none"><img loading="lazy" class="rounded-circle border" width="48" height="48" src="${ data.users[0].profile_image_url }"></a>
                 </div>`;
             }
 
@@ -82,10 +82,10 @@ const ftfHelpers = {
                     /* TODO: Video URLs not being passed in Twitter API v2.
                        https://twittercommunity.com/t/how-do-i-get-the-video-url-in-recent-search/141896
                     */
-                    tweetText += `<a class="tweet-video-placeholder" href="${ tweetUrl }" target="_blank"><img width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.preview_image_url }"></a>`;
+                    tweetText += `<a class="tweet-video-placeholder" href="${ tweetUrl }" target="_blank"><img loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.preview_image_url }"></a>`;
 
                 } else if ( media.type === 'photo' ){
-                    tweetText += `<a href="${ tweetUrl }" target="_blank"><img width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.url }"></a>`;
+                    tweetText += `<a href="${ tweetUrl }" target="_blank"><img loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.url }"></a>`;
                 }
 
                 tweetText += '</div>';
@@ -233,7 +233,7 @@ ftfHelpers.ready( function(){
                                     let urlAttachmentPreviewHTML = '';
 
                                     if ( data.image ){
-                                        urlAttachmentPreviewHTML += `<img class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="">`;
+                                        urlAttachmentPreviewHTML += `<img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="">`;
                                     }
 
                                     urlAttachmentPreviewHTML += `<div class="card-body">`;
