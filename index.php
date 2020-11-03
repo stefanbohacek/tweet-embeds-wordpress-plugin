@@ -273,15 +273,11 @@ class FTF_Alt_Embed_Tweet {
 
         ?>
 
-        <div class="notice notice-info">
-            <p>This plugin is under active development and is only available via direct download <a href="#">from its GitHub repo</a>.</p>
-            <p>Please reach out with any questions <a href="mailto:stefan@fourtonfish.com?subject=Alternative Tweet Embedding">via email</a> or <a href="https://twitter.com/fourtonfish">Twitter</a>.</p>
-        </div>
-
         <h3 id="about">About the plugin</h3>
         <p>Embed Tweets on your WordPress website without 3rd party scripts, improving your site's performance and protecting your visitors' privacy.</p>
         <p>Learn more <a href="https://fourtonfish.com/project/alternative-tweet-embedding/" target="_blank">on fourtonfish.com</a>.</p>
-        
+        <p>Please reach out with any questions <a href="mailto:stefan@fourtonfish.com?subject=Alternative Tweet Embedding">via email</a> or <a href="https://twitter.com/fourtonfish">Twitter</a>.</p>
+
         <h3 id="settings-twitter-api-keys">Twitter API keys</h3>
         <?php if ( empty( $twitter_api_consumer_key ) || empty( $twitter_api_consumer_secret ) || empty( $twitter_api_oauth_access_token ) || empty( $twitter_api_oauth_access_token_secret ) ){ ?>
             <p>To use this plugin, you need to first sign up for a Twitter developer account and retrieve your API keys.</p>
