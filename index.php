@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Alternative Tweet Embedding
- * Plugin URI: https://github.com/fourtonfish/TBD
+ * Plugin URI: https://github.com/fourtonfish/alt-embed-tweet
  * Description: Embed tweets without compromising your users' privacy and your site's performance.
  * Version: 0.0.1
  * Author: fourtonfish
@@ -279,7 +279,8 @@ class FTF_Alt_Embed_Tweet {
         </div>
 
         <h3 id="about">About the plugin</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec egestas urna nec dui luctus dignissim. Sed luctus fermentum egestas. Donec lobortis vestibulum lorem sed imperdiet. Pellentesque tempus leo vel dapibus commodo. Sed pharetra molestie purus sed aliquam. Phasellus feugiat lacus vitae purus viverra, vel aliquam elit tincidunt. Aliquam eleifend fermentum risus, id vulputate nunc ultricies sed. Nulla est neque, mollis et sapien non, maximus laoreet turpis. Etiam aliquet consectetur felis non pellentesque. Quisque commodo blandit dui, eu eleifend nisl pharetra ut.</p>
+        <p>Embed Tweets on your WordPress website without 3rd party scripts, improving your site's performance and protecting your visitors' privacy.</p>
+        <p>Learn more <a href="https://fourtonfish.com/project/alternative-tweet-embedding/" target="_blank">on fourtonfish.com</a>.</p>
         
         <h3 id="settings-twitter-api-keys">Twitter API keys</h3>
         <?php if ( empty( $twitter_api_consumer_key ) || empty( $twitter_api_consumer_secret ) || empty( $twitter_api_oauth_access_token ) || empty( $twitter_api_oauth_access_token_secret ) ){ ?>
