@@ -1,17 +1,15 @@
 <?php
 /**
- * Plugin Name: Alternative Tweet Embedding
- * Plugin URI: https://github.com/fourtonfish/alt-embed-tweet
- * Description: Embed tweets without compromising your users' privacy and your site's performance.
- * Version: 0.0.1
+ * Plugin Name: TEmbeds
+ * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
+ * Description: Embed Tweets without compromising your users' privacy and your site's performance.
+ * Version: 1.0.1
  * Author: fourtonfish
  *
  * @package ftf-alt-embed-tweet
  */
 
 defined( 'ABSPATH' ) || exit;
-
-require_once('TwitterAPIExchange.php');
 
 class FTF_Alt_Embed_Tweet {
     function __construct(){
@@ -21,7 +19,46 @@ class FTF_Alt_Embed_Tweet {
         add_action( 'admin_init', array( $this, 'settings_init' ) );
         add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
         add_action( 'render_block', array( $this, 'remove_twitter_script' ), 10, 2 );
-        add_filter( 'plugin_action_links_alt-embed-tweet/index.php', array( $this, 'settings_page_link' ) );
+        add_filter( 'plugin_action_links_tembeds/index.php', array( $this, 'settings_page_link' ) );
+    }
+
+    function create_bearer_token( $twitter_api_consumer_key, $twitter_api_consumer_secret ){
+        $args = array(
+            'headers' => array(
+                'Authorization' => 'Basic ' . base64_encode( $twitter_api_consumer_key . ':' . $twitter_api_consumer_secret )
+            ),
+            'body' => array( 'grant_type' => 'client_credentials' )
+        );
+
+        $response = wp_remote_post( 'https://api.twitter.com/oauth2/token', $args );
+
+        return json_decode( $response['body'] );
+    }
+
+    function call_twitter_api( $endpoint = 'account/verify_credentials', $data = null ){
+        $version = '2';
+        $data = array();
+
+        $twitter_api_consumer_key = get_option( 'ftf_alt_embed_tweet_twitter_api_consumer_key' );
+        $twitter_api_consumer_secret = get_option( 'ftf_alt_embed_tweet_twitter_api_consumer_secret' );
+        $twitter_api_oauth_access_token = get_option( 'ftf_alt_embed_tweet_twitter_api_oauth_access_token' );
+        $twitter_api_oauth_access_token_secret = get_option( 'ftf_alt_embed_tweet_twitter_api_oauth_access_token_secret' );
+
+        $token = self::create_bearer_token( $twitter_api_consumer_key, $twitter_api_consumer_secret );
+        $api_endpoint = 'https://api.twitter.com/' . $version . '/' . $endpoint;
+
+        if ( isset( $token->token_type ) && $token->token_type == 'bearer' ){
+
+            $args = array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $token->access_token
+                )
+            );
+
+            $response = wp_remote_get( $api_endpoint, $args );
+        }
+
+        return $response['body'];
     }
 
     function enqueue_scripts(){
@@ -95,11 +132,8 @@ class FTF_Alt_Embed_Tweet {
                 'oauth_access_token_secret' => $twitter_api_oauth_access_token_secret
             );
 
-            $tweet_ids = $_POST[ 'tweet_ids' ];
-            // log_this( 'tweet_ids', $tweet_ids );
-
+            $tweet_ids = sanitize_text_field( $_POST[ 'tweet_ids' ] );
             $tweet_ids = explode( ',', $tweet_ids );
-
 
             if ( !empty( $tweet_ids ) ){
                 foreach ( $tweet_ids as $index => $tweet_id ) {
@@ -109,21 +143,12 @@ class FTF_Alt_Embed_Tweet {
                         $cache_key = "ftf_alt_embed_tweet_data:" . $tweet_id;
                         $tweet_data = wp_cache_get( $cache_key );
 
-                        // log_this( 'checking cache', array(
-                        //     'cache_key' => $cache_key,
-                        //     // 'tweet_data' => $tweet_data === false ? 'empty' : $tweet_data,
-                        //     'tweet_data' => $tweet_data === false ? 'empty' : 'found',                            
-                        // ) );
-
                         if ( $tweet_data !== false ){
-                            // log_this( 'found cached data', $cache_key );
                             unset( $tweet_ids[$index] );
                             $data[] = $tweet_data;
                         }
                     }
                 }
-
-                // log_this( 'remaining tweet_ids', $tweet_ids );
 
                 $url = 'https://api.twitter.com/2/tweets';
                 $request_method = 'GET';
@@ -136,21 +161,11 @@ class FTF_Alt_Embed_Tweet {
                     'media.fields' => 'media_key,preview_image_url,type,url,width,height'
                 );
 
-
-                $twitter = new TwitterAPIExchange( $settings );
-                $reponse = $twitter->setGetfield( '?' . str_replace( '%2C', ',', http_build_query( $post_fields ) ) )
-                             ->buildOauth( $url, $request_method )
-                             ->performRequest();
-       
-                $response_array = json_decode( $reponse );
+                $response = self::call_twitter_api(  'tweets?' . str_replace( '%2C', ',', http_build_query( $post_fields ) ) );
+                $response_array = json_decode( rtrim($response, "\0") );
                 $tweet_data = array();
 
-                // log_this( 'debug:response_array', $response_array );
-
-
                 foreach ( $response_array->data as $tweet ) {
-
-
 
                     $tweet->users = array();
 
@@ -160,7 +175,6 @@ class FTF_Alt_Embed_Tweet {
                         }
 
                     }
-
                     
                     $tweet->media = array();
 
@@ -196,13 +210,6 @@ class FTF_Alt_Embed_Tweet {
             }
         }
 
-        // log_this( array(
-        //     'tweet_ids' => $tweet_ids,
-        //     'query' => '?id=' . implode( ',', $tweet_ids ) . '&tweet_mode=extended',
-        //     // 'data' => $data,
-        //     // 'response' => json_decode( $reponse )
-        // ) );
-
         wp_send_json( $data );
     }
 
@@ -217,8 +224,8 @@ class FTF_Alt_Embed_Tweet {
 
     function add_settings_page(){
         add_options_page(
-            'Settings for the Alternative Tweet Embedding plugin',
-            'Alternative Tweet Embedding',
+            'Settings for the Tweet Embeds plugin',
+            'Tweet Embeds',
             'manage_options',
             'ftf-alt-embed-tweet',
             array( $this, 'render_settings_page' )
@@ -245,7 +252,7 @@ class FTF_Alt_Embed_Tweet {
 
     function render_settings_page(){ ?>
         <div class="wrap">
-        <h1>Alternative Tweet Embedding</h1>
+        <h1>Tweet Embeds</h1>
 
         <form action='options.php' method='post' >
             <?php
@@ -275,16 +282,16 @@ class FTF_Alt_Embed_Tweet {
 
         <h3 id="about">About the plugin</h3>
         <p>Embed Tweets on your WordPress website without 3rd party scripts, improving your site's performance and protecting your visitors' privacy.</p>
-        <p>Please reach out with any questions <a href="mailto:stefan@fourtonfish.com?subject=Alternative Tweet Embedding">via email</a> or <a href="https://twitter.com/fourtonfish">Twitter</a>.</p>
+        <p>Please reach out with any questions <a href="mailto:stefan@fourtonfish.com?subject=Tweet Embeds WordPress Plugin">via email</a> or <a href="https://twitter.com/fourtonfish">Twitter</a>.</p>
         
         <p>
-            <a class="button" href="https://fourtonfish.com/project/alternative-tweet-embedding/" target="_blank">Learn more</a>
-            <a class="button" href="https://github.com/fourtonfish/alt-embed-tweet" target="_blank">View source</a>
+            <a class="button" href="https://fourtonfish.com/project/tweet-embeds-wordpress-plugin/" target="_blank">Learn more</a>
+            <a class="button" href="https://github.com/fourtonfish/tweet-embeds-wordpress-plugin" target="_blank">View source</a>
         </p>
 
         <h3 id="settings-twitter-api-keys">Twitter API keys</h3>
         <?php if ( empty( $twitter_api_consumer_key ) || empty( $twitter_api_consumer_secret ) || empty( $twitter_api_oauth_access_token ) || empty( $twitter_api_oauth_access_token_secret ) ){ ?>
-            <p>To use this plugin, you need to first sign up for a Twitter developer account and retrieve your API keys.</p>
+            <p>To show the number of likes and retweets and include images and GIFs in Tweets, you need to sign up for a Twitter developer account and add your API keys below.</p>
             <!-- <p><a class="button" href="https://botwiki.org/tutorials/how-to-create-a-twitter-app/" target="_blank">See how</a></p> -->
             <p><a class="button" href="https://developer.twitter.com/en/apps" target="_blank">Open Twitter developer dashboard</a></p>
         <?php } else { ?>
@@ -406,20 +413,6 @@ class FTF_Alt_Embed_Tweet {
 -->
             </tbody>
         </table>
-        <h3 id="todo">To-do</h3>
-        <ul class="ul-disc">
-            <li>URL attachment previews
-                <ul class="ul-disc">
-                    <li><strike>show site name, description, and an image thumbnail</strike></li>
-                    <li><strike>play animated GIFs</strike></li>
-                    <li>play videos (only preview image is available <a href="https://twittercommunity.com/t/how-do-i-get-the-video-url-in-recent-search/141896" target="_blank">until video URLs are supported in Twitter API v2</a>)</li>
-                    <li>show quoted tweets</li>
-                    <li>show image thumbnails for bit.ly URLs</li>
-                    <li>use a more granular caching system based on the age of a tweet</li>
-                    <li>render tweets in the admin</li>
-                </ul>
-            </li>
-        </ul>
     <?php }    
 
     function settings_page_link( $links ){
