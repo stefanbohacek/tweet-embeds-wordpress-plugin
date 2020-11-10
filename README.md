@@ -1,4 +1,4 @@
-![Preview of multiple Tweets embedded with the Tweet Embeds plugin](./images/thumbnail/alternative-tweet-embedding-wp-plugin.png)
+![Preview of multiple Tweets embedded with the Tweet Embeds plugin](./images/thumbnail/tweet-embeds-bw-tint.png)
 
 # Tweet Embeds
 
