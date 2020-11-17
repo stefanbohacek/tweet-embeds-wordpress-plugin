@@ -7,6 +7,10 @@ const ftfHelpers = {
             document.addEventListener( 'DOMContentLoaded', fn );
         }
     },
+    dispatchEvent( eventName ){
+        const event = new Event( eventName );
+        document.dispatchEvent( event );
+    },
     processTweets: function(){
         const tweets = document.querySelectorAll( 'blockquote.twitter-tweet' );
         let tweetIds = [];
@@ -43,12 +47,17 @@ const ftfHelpers = {
                             } );
 
                             const tweetsWithAttachment = document.querySelectorAll( '[data-url-attachment-processed="false"]' );
+                            let tweetsWithAttachmentCount = tweetsWithAttachment.length;
+
+                            if ( tweetsWithAttachmentCount === 0 ){
+                                ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
+                            }
 
                             // console.log( 'tweetsWithAttachment', tweetsWithAttachment );
 
                             for ( const tweet of tweetsWithAttachment ) {
                                 tweet.dataset.urlAttachmentProcessed = 'true';
-                                
+
                                 fetch( `https://fourtonfish.com/sitesummary/?url=${ tweet.dataset.urlAttachment }` ).then( function( response ) { 
                                     return response.json();
                                 } ).then( function( data ) {
@@ -81,12 +90,21 @@ const ftfHelpers = {
                                         urlAttachmentPreview.innerHTML = urlAttachmentPreviewHTML;
                                         tweet.querySelector( '.tweet-body-wrapper' ).appendChild( urlAttachmentPreview );
                                     }
+                                } ).catch( function(error){
+                                    /* noop */
+                                })
+                                .then( function(){
+                                    tweetsWithAttachmentCount--;
+                                    console.log( 'tweetsWithAttachmentCount', tweetsWithAttachmentCount );
+                                    if ( tweetsWithAttachmentCount === 0 ){
+                                        ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
+                                    }
                                 } );
                             }
                         }
                     } )
                     .catch( function( error ){
-                        console.error( 'ftf_aet_error', error );
+                        // console.error( 'tembeds_error', error );
                     } );
             } else {
 
