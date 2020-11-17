@@ -95,7 +95,7 @@ const ftfHelpers = {
                                 })
                                 .then( function(){
                                     tweetsWithAttachmentCount--;
-                                    console.log( 'tweetsWithAttachmentCount', tweetsWithAttachmentCount );
+                                    // console.log( 'tweetsWithAttachmentCount', tweetsWithAttachmentCount );
                                     if ( tweetsWithAttachmentCount === 0 ){
                                         ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
                                     }
