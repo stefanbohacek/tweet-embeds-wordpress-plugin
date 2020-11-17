@@ -7,6 +7,146 @@ const ftfHelpers = {
             document.addEventListener( 'DOMContentLoaded', fn );
         }
     },
+    processTweets: function(){
+        const tweets = document.querySelectorAll( 'blockquote.twitter-tweet' );
+        let tweetIds = [];
+
+        for ( const tweet of tweets ) {
+            const anchors = tweet.querySelectorAll( 'a' );
+            const url = anchors[anchors.length - 1].href;
+            const tweetId = url.match(/status\/(\d+)/g)[0].replace( 'status/', '' );
+            tweetIds.push( tweetId );
+            tweet.dataset.tweetId = tweetId;
+        }
+
+        // console.log( 'tweet IDs', tweetIds );
+
+        if ( tweetIds.length ){
+            if ( ftf_aet.config.use_api ){
+                fetch( window.ftf_aet.ajax_url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Cache-Control': 'no-cache',
+                    },
+                    body: new URLSearchParams( {
+                        action: 'ftf_embed_tweet',
+                        tweet_ids: tweetIds.join( ',' )
+                    } ) } )
+                    .then(function( response ){ return response.json() } )
+                    .then( function( response ){
+                        // console.log( 'response', response );
+                       if ( response && response.length ){
+                            response.forEach( function( data ){
+                                ftfHelpers.renderTweet( data );
+                            } );
+
+                            const tweetsWithAttachment = document.querySelectorAll( '[data-url-attachment-processed="false"]' );
+
+                            // console.log( 'tweetsWithAttachment', tweetsWithAttachment );
+
+                            for ( const tweet of tweetsWithAttachment ) {
+                                tweet.dataset.urlAttachmentProcessed = 'true';
+                                
+                                fetch( `https://fourtonfish.com/sitesummary/?url=${ tweet.dataset.urlAttachment }` ).then( function( response ) { 
+                                    return response.json();
+                                } ).then( function( data ) {
+                                    // console.log( 'sitesummary', data ); 
+                                    if ( data && data.image ){
+                                        let urlAttachmentPreview = document.createElement( 'div' );
+                                        urlAttachmentPreview.className = `tweet-attachment-preview card mt-4`;
+
+                                        let tmpAnchor = document.createElement ( 'a' );
+                                        tmpAnchor.href = tweet.dataset.urlAttachment;
+
+                                        let urlAttachmentPreviewHTML = '';
+
+                                        if ( data.image ){
+                                            urlAttachmentPreviewHTML += `<img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="">`;
+                                        }
+
+                                        urlAttachmentPreviewHTML += `<div class="card-body">`;
+
+                                        if ( data.title ){
+                                            urlAttachmentPreviewHTML += `<h5 class="card-title">${ data.title }</h5>`;
+                                        }
+
+                                        if ( data.description ){
+                                            urlAttachmentPreviewHTML += `<h6 class="card-subtitle mb-2 text-muted">${ data.description }</h6>`;
+                                        }
+
+                                        urlAttachmentPreviewHTML += `<p class="card-text">🔗 <a class="stretched-link text-muted" href="${ tweet.dataset.urlAttachment }" target="_blank">${ tmpAnchor.hostname }</a></p></div>`;
+
+                                        urlAttachmentPreview.innerHTML = urlAttachmentPreviewHTML;
+                                        tweet.querySelector( '.tweet-body-wrapper' ).appendChild( urlAttachmentPreview );
+                                    }
+                                } );
+                            }
+                        }
+                    } )
+                    .catch( function( error ){
+                        console.error( 'ftf_aet_error', error );
+                    } );
+            } else {
+
+                for ( const tweet of tweets ) {
+                    // console.log( 'debug:tweet', tweet );
+                    // console.log( 'debug:childNodes', tweet.childNodes );
+
+                    let tweetAttribution = '', tweetDate = '';
+
+                    if ( tweet.childNodes && tweet.childNodes.length ){
+                        if ( tweet.childNodes.length === 3 ){
+                            tweetDate = tweet.childNodes[2].textContent;
+                            for ( let i = 0; i < tweet.childNodes.length; i++ ){
+                                let currentNode = tweet.childNodes[i];
+                                if ( currentNode.nodeName === '#text' ) {
+                                    tweetAttribution = currentNode.nodeValue;
+                                    break;
+                                }
+                            }                        
+                        } else {
+                            tweetAttribution = tweet.childNodes[tweet.childNodes.length - 2].innerHTML;
+                            let tweetDateEl = document.createElement( 'div' );
+                            tweetDateEl.innerHTML = tweetAttribution;
+                            tweetDate = tweetDateEl.querySelector( 'a' ).textContent;
+                        }
+
+                        const usernames = tweetAttribution.match( /@\w+/gi );
+                        let name = '', username = '';
+                        // console.log( 'debug:tweetDate', tweetDate );
+
+                        if ( usernames && usernames[0] ){
+                            username = usernames[0];
+                            const names = tweetAttribution.split( username );
+                            // console.log( 'debug:names', usernames );
+
+                            if ( names && names[0] ){
+                                name = names[0].replace( '— ', '' ).replace( ' (', '' );
+                            }
+                        }
+
+                        ftfHelpers.renderTweet( {
+                          'created_at': tweetDate,
+                          'text': tweet.querySelector( 'p' ).innerHTML,
+                          'id': tweet.dataset.tweetId,
+                          // 'author_id': '',
+                          'users': [
+                            {
+                              'name': name,
+                              'username': username.replace(/^@/, ''),
+                              // 'id': '',
+                              // 'profile_image_url': '',
+                              // 'verified': false
+                            }
+                          ]
+                        } );                    
+                    }
+                }
+            }
+        }
+    },
     renderTweet: function( data ){
         // console.log( 'debug:', data );
         let tweetText = data.text,
@@ -169,7 +309,7 @@ const ftfHelpers = {
 
         if ( lastUrl ){
             renderedTweet.dataset.urlAttachment = lastUrl.expanded_url;
-
+            renderedTweet.dataset.urlAttachmentProcessed = 'false';
         }
 
         const tweet = document.querySelector( `[data-tweet-id="${ data.id }"]` );
@@ -182,139 +322,5 @@ const ftfHelpers = {
 }
 
 ftfHelpers.ready( function(){
-    const tweets = document.querySelectorAll( 'blockquote.twitter-tweet' );
-    let tweetIds = [];
-
-    for ( const tweet of tweets ) {
-        const anchors = tweet.querySelectorAll( 'a' );
-        const url = anchors[anchors.length - 1].href;
-        const tweetId = url.match(/status\/(\d+)/g)[0].replace( 'status/', '' );
-        tweetIds.push( tweetId );
-        tweet.dataset.tweetId = tweetId;
-    }
-
-    // console.log( 'tweet IDs', tweetIds );
-
-    if ( tweetIds.length ){
-        if ( ftf_aet.config.use_api ){
-            fetch( window.ftf_aet.ajax_url, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Cache-Control': 'no-cache',
-                },
-                body: new URLSearchParams( {
-                    action: 'ftf_embed_tweet',
-                    tweet_ids: tweetIds.join( ',' )
-                } ) } )
-                .then(function( response ){ return response.json() } )
-                .then( function( response ){
-                    // console.log( 'response', response );
-                   if ( response && response.length ){
-                        response.forEach( function( data ){
-                            ftfHelpers.renderTweet( data );
-                        } );
-
-                        const tweetsWithAttachment = document.querySelectorAll( '[data-url-attachment]' );
-
-                        for ( const tweet of tweetsWithAttachment ) {
-                            fetch( `https://fourtonfish.com/sitesummary/?url=${ tweet.dataset.urlAttachment }` ).then( function( response ) { 
-                                return response.json();
-                            } ).then( function( data ) {
-                                // console.log( 'sitesummary', data ); 
-                                if ( data && data.image ){
-                                    let urlAttachmentPreview = document.createElement( 'div' );
-                                    urlAttachmentPreview.className = `tweet-attachment-preview card mt-4`;
-
-                                    let tmpAnchor = document.createElement ( 'a' );
-                                    tmpAnchor.href = tweet.dataset.urlAttachment;
-
-                                    let urlAttachmentPreviewHTML = '';
-
-                                    if ( data.image ){
-                                        urlAttachmentPreviewHTML += `<img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="">`;
-                                    }
-
-                                    urlAttachmentPreviewHTML += `<div class="card-body">`;
-
-                                    if ( data.title ){
-                                        urlAttachmentPreviewHTML += `<h5 class="card-title">${ data.title }</h5>`;
-                                    }
-
-                                    if ( data.description ){
-                                        urlAttachmentPreviewHTML += `<h6 class="card-subtitle mb-2 text-muted">${ data.description }</h6>`;
-                                    }
-
-                                    urlAttachmentPreviewHTML += `<p class="card-text">🔗 <a class="stretched-link text-muted" href="${ tweet.dataset.urlAttachment }" target="_blank">${ tmpAnchor.hostname }</a></p></div>`;
-
-                                    urlAttachmentPreview.innerHTML = urlAttachmentPreviewHTML;
-
-                                    tweet.querySelector( '.tweet-body-wrapper' ).appendChild( urlAttachmentPreview );
-                                }
-                            } );
-                        }
-                    }
-                } )
-                .catch( function( error ){
-                    console.error( 'ftf_aet_error', error );
-                } );
-        } else {
-
-            for ( const tweet of tweets ) {
-                // console.log( 'debug:tweet', tweet );
-                // console.log( 'debug:childNodes', tweet.childNodes );
-
-                let tweetAttribution = '', tweetDate = '';
-
-                if ( tweet.childNodes && tweet.childNodes.length ){
-                    if ( tweet.childNodes.length === 3 ){
-                        tweetDate = tweet.childNodes[2].textContent;
-                        for ( let i = 0; i < tweet.childNodes.length; i++ ){
-                            let currentNode = tweet.childNodes[i];
-                            if ( currentNode.nodeName === '#text' ) {
-                                tweetAttribution = currentNode.nodeValue;
-                                break;
-                            }
-                        }                        
-                    } else {
-                        tweetAttribution = tweet.childNodes[tweet.childNodes.length - 2].innerHTML;
-                        let tweetDateEl = document.createElement( 'div' );
-                        tweetDateEl.innerHTML = tweetAttribution;
-                        tweetDate = tweetDateEl.querySelector( 'a' ).textContent;
-                    }
-
-                    const usernames = tweetAttribution.match( /@\w+/gi );
-                    let name = '', username = '';
-                    // console.log( 'debug:tweetDate', tweetDate );
-
-                    if ( usernames && usernames[0] ){
-                        username = usernames[0];
-                        const names = tweetAttribution.split( username );
-                        // console.log( 'debug:names', usernames );
-
-                        if ( names && names[0] ){
-                            name = names[0].replace( '— ', '' ).replace( ' (', '' );
-                        }
-                    }
-
-                    ftfHelpers.renderTweet( {
-                      'created_at': tweetDate,
-                      'text': tweet.querySelector( 'p' ).innerHTML,
-                      'id': tweet.dataset.tweetId,
-                      // 'author_id': '',
-                      'users': [
-                        {
-                          'name': name,
-                          'username': username.replace(/^@/, ''),
-                          // 'id': '',
-                          // 'profile_image_url': '',
-                          // 'verified': false
-                        }
-                      ]
-                    } );                    
-                }
-            }
-        }
-    }
+    ftfHelpers.processTweets();
 } );
