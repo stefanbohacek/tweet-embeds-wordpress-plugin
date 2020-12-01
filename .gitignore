@@ -1,3 +1,4 @@
 node_modules
 vendor
+!src/frontend/styles/bootstrap/vendor
 .DS_Store
