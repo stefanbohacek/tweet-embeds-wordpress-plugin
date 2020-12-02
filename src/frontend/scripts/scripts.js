@@ -7,9 +7,37 @@ const ftfHelpers = {
             document.addEventListener( 'DOMContentLoaded', fn );
         }
     },
+    fetchData( data, cb, done ){
+        done = done || function(){ /* noop */ }
+
+        fetch( window.ftf_aet.ajax_url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cache-Control': 'no-cache',
+            },
+            body: new URLSearchParams( data ) } )
+            .then(function( response ){ return response.json() } )
+            .then( function( response ){
+                // console.log( 'response', response );
+                cb( response );
+
+            } )
+            .catch( function( error ){
+                console.error( 'tembeds_error', error );
+            } )
+            .then( done );
+    },
     dispatchEvent( eventName ){
         const event = new Event( eventName );
         document.dispatchEvent( event );
+    },
+    processAttachmentURL: function( cb ){
+
+    },
+    getTweetId: function( url ){
+        return url.match(/status\/(\d+)/g)[0].replace( 'status/', '' );
     },
     processTweets: function(){
         const tweets = document.querySelectorAll( 'blockquote.twitter-tweet' );
@@ -18,7 +46,7 @@ const ftfHelpers = {
         for ( const tweet of tweets ) {
             const anchors = tweet.querySelectorAll( 'a' );
             const url = anchors[anchors.length - 1].href;
-            const tweetId = url.match(/status\/(\d+)/g)[0].replace( 'status/', '' );
+            const tweetId = ftfHelpers.getTweetId( url );
             tweetIds.push( tweetId );
             tweet.dataset.tweetId = tweetId;
         }
@@ -27,85 +55,88 @@ const ftfHelpers = {
 
         if ( tweetIds.length ){
             if ( ftf_aet.config.use_api ){
-                fetch( window.ftf_aet.ajax_url, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Cache-Control': 'no-cache',
-                    },
-                    body: new URLSearchParams( {
+                ftfHelpers.fetchData( {
                         action: 'ftf_embed_tweet',
                         tweet_ids: tweetIds.join( ',' )
-                    } ) } )
-                    .then(function( response ){ return response.json() } )
-                    .then( function( response ){
-                        // console.log( 'response', response );
-                       if ( response && response.length ){
-                            response.forEach( function( data ){
-                                ftfHelpers.renderTweet( data );
-                            } );
+                    }, function( response ){
+                   if ( response && response.length ){
+                        response.forEach( function( data ){
+                            ftfHelpers.renderTweet( data );
+                        } );
 
-                            const tweetsWithAttachment = document.querySelectorAll( '[data-url-attachment-processed="false"]' );
-                            let tweetsWithAttachmentCount = tweetsWithAttachment.length;
+                        const tweetsWithAttachment = document.querySelectorAll( '[data-url-attachment-processed="false"]' );
+                        let tweetsWithAttachmentCount = tweetsWithAttachment.length;
 
-                            if ( tweetsWithAttachmentCount === 0 ){
-                                ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
-                            }
+                        if ( tweetsWithAttachmentCount === 0 ){
+                            ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
+                        }
 
-                            // console.log( 'tweetsWithAttachment', tweetsWithAttachment );
+                        // console.log( 'tweetsWithAttachment', tweetsWithAttachment );
 
-                            for ( const tweet of tweetsWithAttachment ) {
-                                tweet.dataset.urlAttachmentProcessed = 'true';
+                        for ( const tweet of tweetsWithAttachment ) {
+                            tweet.dataset.urlAttachmentProcessed = 'true';
 
-                                fetch( `https://fourtonfish.com/sitesummary/?url=${ tweet.dataset.urlAttachment }` ).then( function( response ) { 
-                                    return response.json();
-                                } ).then( function( data ) {
-                                    // console.log( 'sitesummary', data ); 
-                                    if ( data && data.image ){
-                                        let urlAttachmentPreview = document.createElement( 'div' );
-                                        urlAttachmentPreview.className = `tweet-attachment-preview card mt-4`;
-
-                                        let tmpAnchor = document.createElement ( 'a' );
-                                        tmpAnchor.href = tweet.dataset.urlAttachment;
-
-                                        let urlAttachmentPreviewHTML = '';
-
-                                        if ( data.image ){
-                                            urlAttachmentPreviewHTML += `<img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="">`;
-                                        }
-
-                                        urlAttachmentPreviewHTML += `<div class="card-body">`;
-
-                                        if ( data.title ){
-                                            urlAttachmentPreviewHTML += `<h5 class="card-title">${ data.title }</h5>`;
-                                        }
-
-                                        if ( data.description ){
-                                            urlAttachmentPreviewHTML += `<h6 class="card-subtitle mb-2 text-muted">${ data.description }</h6>`;
-                                        }
-
-                                        urlAttachmentPreviewHTML += `<p class="card-text">🔗 <a class="stretched-link text-muted" href="${ tweet.dataset.urlAttachment }" target="_blank">${ tmpAnchor.hostname }</a></p></div>`;
-
-                                        urlAttachmentPreview.innerHTML = urlAttachmentPreviewHTML;
-                                        tweet.querySelector( '.tweet-body-wrapper' ).appendChild( urlAttachmentPreview );
-                                    }
-                                } ).catch( function(error){
-                                    /* noop */
-                                })
-                                .then( function(){
-                                    tweetsWithAttachmentCount--;
-                                    // console.log( 'tweetsWithAttachmentCount', tweetsWithAttachmentCount );
-                                    if ( tweetsWithAttachmentCount === 0 ){
-                                        ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
+                            if ( tweet.dataset.urlAttachment.indexOf( 'twitter.com/' ) > -1 ){
+                                console.log( 'rendering QT...', ftfHelpers.getTweetId( tweet.dataset.urlAttachment ) );
+                                ftfHelpers.fetchData( {
+                                        action: 'ftf_embed_tweet',
+                                        tweet_ids: [ftfHelpers.getTweetId( tweet.dataset.urlAttachment )]
+                                    }, function( response ){
+                                        console.log( response );
+                                   if ( response && response.length ){
+                                        response.forEach( function( data ){
+                                            ftfHelpers.renderTweet( data, tweet );
+                                        } );
                                     }
                                 } );
+                            } else {
+
                             }
+
+                            ftfHelpers.fetchData( {
+                                    action: 'ftf_get_site_info',
+                                    url: tweet.dataset.urlAttachment
+                                }, function( data ){
+                                if ( data && data.image ){
+                                    let urlAttachmentPreview = document.createElement( 'div' );
+                                    urlAttachmentPreview.className = `tweet-attachment-preview card mt-4`;
+
+                                    let tmpAnchor = document.createElement ( 'a' );
+                                    tmpAnchor.href = tweet.dataset.urlAttachment;
+
+                                    let urlAttachmentPreviewHTML = '';
+
+                                    if ( data.image ){
+                                        urlAttachmentPreviewHTML += `<img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="">`;
+                                    }
+
+                                    urlAttachmentPreviewHTML += `<div class="card-body">`;
+
+                                    if ( data.title ){
+                                        urlAttachmentPreviewHTML += `<h5 class="card-title">${ data.title }</h5>`;
+                                    }
+
+                                    if ( data.description ){
+                                        urlAttachmentPreviewHTML += `<h6 class="card-subtitle mb-2 text-muted">${ data.description }</h6>`;
+                                    }
+
+                                    urlAttachmentPreviewHTML += `<p class="card-text">🔗 <a class="stretched-link text-muted" href="${ tweet.dataset.urlAttachment }" target="_blank">${ tmpAnchor.hostname }</a></p></div>`;
+
+                                    urlAttachmentPreview.innerHTML = urlAttachmentPreviewHTML;
+                                    tweet.querySelector( '.tweet-body-wrapper' ).appendChild( urlAttachmentPreview );
+                                }
+
+                            }, function(){
+                                tweetsWithAttachmentCount--;
+                                // console.log( 'tweetsWithAttachmentCount', tweetsWithAttachmentCount );
+                                if ( tweetsWithAttachmentCount === 0 ){
+                                    ftfHelpers.dispatchEvent( 'tembeds_tweets_processed' );
+                                }
+                            } );                           
                         }
-                    } )
-                    .catch( function( error ){
-                        // console.error( 'tembeds_error', error );
-                    } );
+                    }
+                    
+                } );
             } else {
 
                 for ( const tweet of tweets ) {
@@ -165,7 +196,7 @@ const ftfHelpers = {
             }
         }
     },
-    renderTweet: function( data ){
+    renderTweet: function( data, container ){
         // console.log( 'debug:', data );
         let tweetText = data.text,
             tweetUrl = `https://twitter.com/${ data.users[0].username }/status/${ data.id }`,
@@ -300,16 +331,18 @@ const ftfHelpers = {
             </div>
             <div class="card-footer">`;
 
-        if ( ftf_aet.config.show_metrics && data.public_metrics ){
-            renderedTweetHTML += `
-                🔁 <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.retweet_count.toLocaleString() }</a> |
-                ❤️ <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.like_count.toLocaleString() }</a> | `;
+        if ( !container ){
+            if ( ftf_aet.config.show_metrics && data.public_metrics ){
+                renderedTweetHTML += `
+                    🔁 <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.retweet_count.toLocaleString() }</a> |
+                    ❤️ <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.like_count.toLocaleString() }</a> | `;
 
+            }
+                        
+            renderedTweetHTML += `<a class="text-muted" href="${ tweetUrl }" target="_blank">${ tweetDate }</a>`;
         }
-                    
-        renderedTweetHTML += `<a class="text-muted" href="${ tweetUrl }" target="_blank">${ tweetDate }</a>
-            </div>
-        </div>`;
+
+        renderedTweetHTML += '</div></div>';
         
         let renderedTweet = document.createElement( 'div' );
         renderedTweet.className = `twitter-tweet twitter-tweet-rendered w-100`;
@@ -330,8 +363,16 @@ const ftfHelpers = {
             renderedTweet.dataset.urlAttachmentProcessed = 'false';
         }
 
-        const tweet = document.querySelector( `[data-tweet-id="${ data.id }"]` );
-        tweet.parentNode.replaceChild( renderedTweet, tweet );
+        if ( container ){
+            const tweetContainer = container.querySelector( '.tweet-body a:last-of-type' );
+            console.log( tweetContainer );
+            tweetContainer.parentNode.replaceChild( renderedTweet, tweetContainer );
+
+
+        } else {
+            const tweet = document.querySelector( `[data-tweet-id="${ data.id }"]` );
+            tweet.parentNode.replaceChild( renderedTweet, tweet );
+        }
 
         // if ( data.id === '1214098949918875648' ){
             // console.log( renderedTweet, data );
