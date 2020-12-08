@@ -12,4 +12,8 @@ Embed Tweets without compromising your users' privacy and your site's performanc
 
 == Description ==
 
-Embed Tweets without compromising your users' privacy and your site's performance.
+Embed Tweets without compromising your users' privacy and your site's performance. This plugin works with the [built-in Tweet Gutenberg block](https://neliosoftware.com/blog/how-to-embed-tweets-in-wordpress-with-gutenberg/) by removing Twitter's script and using Twitter's API to retrieve the data.
+
+You can optionally provide Twitter API keys to show the number of likes and retweets and load images and other media in Tweets.
+
+[Learn more](https://fourtonfish.com/project/tweet-embeds-wordpress-plugin/) | [View source](https://github.com/fourtonfish/tweet-embeds-wordpress-plugin)
