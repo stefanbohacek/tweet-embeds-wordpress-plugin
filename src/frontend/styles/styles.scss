@@ -33,7 +33,7 @@
 
         a{
             text-decoration: none;
-            color: $twitter-blue !important;
+            color: $twitter-blue;
 
             &:hover{
                 text-decoration: underline;
@@ -84,6 +84,11 @@
                 }
             }
 
+        }
+
+        .card{
+            white-space: normal;
+            margin-top: 2rem;
         }
     }
 

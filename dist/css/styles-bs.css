@@ -21,7 +21,7 @@
     line-height: 1.4; }
     .twitter-tweet.twitter-tweet-rendered .tweet-body a {
       text-decoration: none;
-      color: #1b95e0 !important; }
+      color: #1b95e0; }
       .twitter-tweet.twitter-tweet-rendered .tweet-body a:hover {
         text-decoration: underline; }
     .twitter-tweet.twitter-tweet-rendered .tweet-body .tweet-poll-results img.emoji {
@@ -67,6 +67,9 @@
         -o-transition: filter 0.2s;
         transition: filter 0.2s;
         transition: filter 0.2s, -webkit-filter 0.2s; }
+    .twitter-tweet.twitter-tweet-rendered .tweet-body .card {
+      white-space: normal;
+      margin-top: 2rem; }
   .twitter-tweet.twitter-tweet-rendered .tweet-media img {
     height: 260px !important;
     -o-object-fit: cover !important;

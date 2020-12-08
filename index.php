@@ -3,19 +3,26 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.2
+ * Version: 1.0.4
  * Author: fourtonfish
  *
  * @package ftf-alt-embed-tweet
  */
 
+
 defined( 'ABSPATH' ) || exit;
+
+if ( !class_exists( 'simple_html_dom_node' ) ){
+    require_once plugin_dir_path( __FILE__ ) . 'includes/simple_html_dom.php';
+}
 
 class FTF_Alt_Embed_Tweet {
     function __construct(){
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
         add_action( 'wp_ajax_ftf_embed_tweet', array( $this, 'embed_tweet' ), 1000 );
         add_action( 'wp_ajax_nopriv_ftf_embed_tweet', array( $this, 'embed_tweet' ), 1000 );
+        add_action( 'wp_ajax_ftf_get_site_info', array( $this, 'get_site_info' ), 1000 );
+        add_action( 'wp_ajax_nopriv_ftf_get_site_info', array( $this, 'get_site_info' ), 1000 );
         add_action( 'admin_init', array( $this, 'settings_init' ) );
         add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
         add_action( 'render_block', array( $this, 'remove_twitter_script' ), 10, 2 );
@@ -65,8 +72,8 @@ class FTF_Alt_Embed_Tweet {
         $include_bootstrap_styles = get_option( 'ftf_alt_embed_tweet_include_bootstrap_styles', 'on' );
         $show_metrics = get_option( 'ftf_alt_embed_tweet_show_metrics', 'on' );
 
-        $plugin_dir_url = plugin_dir_url(__FILE__);
-        $plugin_dir_path = plugin_dir_path(__FILE__);
+        $plugin_dir_url = plugin_dir_url( __FILE__ );
+        $plugin_dir_path = plugin_dir_path( __FILE__ );
 
         $js_url = $plugin_dir_url . 'dist/js/scripts.min.js';
         $js_path = $plugin_dir_path . 'dist/js/scripts.min.js';
@@ -119,7 +126,7 @@ class FTF_Alt_Embed_Tweet {
 
         if ( empty( $cache_expiration ) ){
             $cache_expiration = 30;
-        }
+        }        
 
         $data = array();
 
@@ -132,85 +139,156 @@ class FTF_Alt_Embed_Tweet {
                 'oauth_access_token_secret' => $twitter_api_oauth_access_token_secret
             );
 
-            $tweet_ids = sanitize_text_field( $_POST[ 'tweet_ids' ] );
-            $tweet_ids = explode( ',', $tweet_ids );
+            if ( array_key_exists( 'tweet_ids', $_POST ) ){
+                $tweet_ids = sanitize_text_field( $_POST[ 'tweet_ids' ] );
+                $tweet_ids = explode( ',', $tweet_ids );
 
-            if ( !empty( $tweet_ids ) ){
-                foreach ( $tweet_ids as $index => $tweet_id ) {
-                    if ( empty( $tweet_id ) ){
-                        unset( $tweet_ids[$index] );
-                    } else {
-                        $cache_key = "ftf_alt_embed_tweet_data:" . $tweet_id;
-                        $tweet_data = wp_cache_get( $cache_key );
-
-                        if ( $tweet_data !== false ){
+                if ( !empty( $tweet_ids ) ){
+                    foreach ( $tweet_ids as $index => $tweet_id ) {
+                        if ( empty( $tweet_id ) ){
                             unset( $tweet_ids[$index] );
-                            $data[] = $tweet_data;
-                        }
-                    }
-                }
+                        } else {
+                            $cache_key = "tweet_data:" . $tweet_id;
+                            $tweet_data = wp_cache_get( $cache_key, 'ftf_alt_embed_tweet' );
 
-                $url = 'https://api.twitter.com/2/tweets';
-                $request_method = 'GET';
-
-                $post_fields = array(
-                    'ids' => implode( ',', $tweet_ids ),
-                    'expansions' => 'author_id,attachments.media_keys,referenced_tweets.id,attachments.poll_ids',
-                    'tweet.fields' => 'attachments,entities,author_id,conversation_id,created_at,id,in_reply_to_user_id,lang,referenced_tweets,source,text,public_metrics',
-                    'user.fields' => 'id,name,username,profile_image_url,verified',
-                    'media.fields' => 'media_key,preview_image_url,type,url,width,height'
-                );
-
-                $response = self::call_twitter_api(  'tweets?' . str_replace( '%2C', ',', http_build_query( $post_fields ) ) );
-                $response_array = json_decode( rtrim($response, "\0") );
-                $tweet_data = array();
-
-                foreach ( $response_array->data as $tweet ) {
-
-                    $tweet->users = array();
-
-                    foreach( $response_array->includes->users as $user ){
-                        if ( $tweet->author_id === $user->id ){
-                            $tweet->users[] = $user;
-                        }
-
-                    }
-                    
-                    $tweet->media = array();
-
-                    if ( $tweet->attachments && $tweet->attachments->media_keys ){
-                        foreach ( $tweet->attachments->media_keys as $media_key ) {
-                            foreach( $response_array->includes->media as $media ){
-                                if ( $media_key === $media->media_key ){
-                                    $tweet->media[] = $media;
-                                }
-                            }
-                        }
-
-                    }
-
-                    $tweet->polls = array();
-
-                    if ( $tweet->attachments && $tweet->attachments->poll_ids ){
-                        foreach ( $tweet->attachments->poll_ids as $poll_id ) {
-                            foreach( $response_array->includes->polls as $poll ){
-                                if ( $poll_id === $poll->id ){
-                                    $tweet->polls[] = $poll;
-                                }
+                            if ( $tweet_data !== false ){
+                                unset( $tweet_ids[$index] );
+                                $data[] = $tweet_data;
                             }
                         }
                     }
 
-                    $cache_key = "ftf_alt_embed_tweet_data:" . $tweet->id;
-                    wp_cache_set( $cache_key, $tweet, '', ( $cache_expiration * MINUTE_IN_SECONDS ) );
-                    $tweet_data[] = $tweet;
-                }
+                    $url = 'https://api.twitter.com/2/tweets';
+                    $request_method = 'GET';
 
-                $data = array_merge( $data, $tweet_data );
+                    $post_fields = array(
+                        'ids' => implode( ',', $tweet_ids ),
+                        'expansions' => 'author_id,attachments.media_keys,referenced_tweets.id,attachments.poll_ids',
+                        'tweet.fields' => 'attachments,entities,author_id,conversation_id,created_at,id,in_reply_to_user_id,lang,referenced_tweets,source,text,public_metrics',
+                        'user.fields' => 'id,name,username,profile_image_url,verified',
+                        'media.fields' => 'media_key,preview_image_url,type,url,width,height'
+                    );
+
+                    $response = self::call_twitter_api(  'tweets?' . str_replace( '%2C', ',', http_build_query( $post_fields ) ) );
+                    $response_array = json_decode( rtrim($response, "\0") );
+                    $tweet_data = array();
+
+                    foreach ( $response_array->data as $tweet ) {
+
+                        $tweet->users = array();
+
+                        foreach( $response_array->includes->users as $user ){
+                            if ( $tweet->author_id === $user->id ){
+                                $tweet->users[] = $user;
+                            }
+
+                        }
+                        
+                        $tweet->media = array();
+
+                        if ( array_key_exists( 'attachments', $tweet ) && array_key_exists( 'media_keys', $tweet->attachments ) ){
+                            foreach ( $tweet->attachments->media_keys as $media_key ) {
+                                foreach( $response_array->includes->media as $media ){
+                                    if ( $media_key === $media->media_key ){
+                                        $tweet->media[] = $media;
+                                    }
+                                }
+                            }
+
+                        }
+
+                        $tweet->polls = array();
+
+                        if ( array_key_exists( 'attachments', $tweet ) && array_key_exists( 'poll_ids', $tweet->attachments ) ){
+                            foreach ( $tweet->attachments->poll_ids as $poll_id ) {
+                                foreach( $response_array->includes->polls as $poll ){
+                                    if ( $poll_id === $poll->id ){
+                                        $tweet->polls[] = $poll;
+                                    }
+                                }
+                            }
+                        }
+
+                        $cache_key = "tweet_data:" . $tweet->id;
+                        wp_cache_set( $cache_key, $tweet, 'ftf_alt_embed_tweet', ( $cache_expiration * MINUTE_IN_SECONDS ) );
+                        $tweet_data[] = $tweet;
+                    }
+
+                    $data = array_merge( $data, $tweet_data );
+                }
             }
         }
-
+        // error_log( print_r( $data, true ) );
         wp_send_json( $data );
+    }
+
+    function get_site_info(){
+        $cache_expiration = get_option( 'ftf_alt_embed_cache_expiration' );
+        
+        if ( empty( $cache_expiration ) ){
+            $cache_expiration = 30;
+        }
+
+        $site_url = sanitize_text_field( $_POST[ 'url' ] );
+        $cache_key = 'site_data:' . $site_url;
+        $site_data = wp_cache_get( $cache_key, 'ftf_alt_embed_tweet' );
+
+        if ( $site_data === false ){
+            $site_html = file_get_html( $site_url );
+
+            $meta_image = $site_html->find( 'meta[name="twitter:image"]' );
+
+            if ( !empty( $meta_image ) ){
+                $image = $meta_image[0]->content;
+            } else {
+                $meta_image = $site_html->find( 'meta[property="og:image"]' );
+                $image = $meta_image[0]->content;
+            }
+
+            $meta_title = $site_html->find( 'meta[name="title"]' );
+
+            if ( !empty( $meta_title ) ){
+                $title = $meta_title[0]->content;
+            } else {
+                $meta_title = $site_html->find( 'meta[name="twitter:title"]' );
+
+                if ( !empty( $meta_title ) ){
+                    $title = $meta_title[0]->content;
+                } else {
+                    $meta_title = $site_html->find( 'meta[property="og:title"]' );
+                    $title = $meta_title[0]->content;
+                }
+            }
+
+            $meta_description = $site_html->find( 'meta[name="description"]' );
+
+            if ( !empty( $meta_description ) ){
+                $description = $meta_description[0]->content;
+            } else {
+                $meta_description = $site_html->find( 'meta[name="twitter:title"]' );
+
+                if ( !empty( $meta_description ) ){
+                    $description = $meta_description[0]->content;
+                } else {
+                    $meta_description = $site_html->find( 'meta[property="og:title"]' );
+                    $description = $meta_description[0]->content;
+                }
+
+            }
+
+            $description = $meta_description[0]->content;
+
+            $site_data = array(
+                'url' => $site_url,
+                'image' => $image,
+                'title' => $title,
+                'description' => $description
+            );
+
+            wp_cache_set( $cache_key, $site_data, 'ftf_alt_embed_tweet', ( $cache_expiration * MINUTE_IN_SECONDS ) );
+        }
+        // error_log( print_r( $site_data, true ) );
+        wp_send_json( $site_data );
     }
 
     function remove_twitter_script( $block_content, $block ) {
@@ -277,6 +355,10 @@ class FTF_Alt_Embed_Tweet {
         $show_metrics = get_option( 'ftf_alt_embed_tweet_show_metrics', 'on' );
         $custom_styles = get_option( 'ftf_alt_embed_tweet_custom_styles' );
         $cache_expiration = get_option( 'ftf_alt_embed_cache_expiration' );
+
+        if ( empty( $cache_expiration ) ){
+            $cache_expiration = 30;
+        }        
 
         ?>
 
