@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: fourtonfish
  *
  * @package ftf-alt-embed-tweet
@@ -25,7 +25,8 @@ class FTF_Alt_Embed_Tweet {
         add_action( 'wp_ajax_nopriv_ftf_get_site_info', array( $this, 'get_site_info' ), 1000 );
         add_action( 'admin_init', array( $this, 'settings_init' ) );
         add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
-        add_action( 'render_block', array( $this, 'remove_twitter_script' ), 10, 2 );
+        add_action( 'render_block', array( $this, 'remove_twitter_script_block' ), 10, 2 );
+        add_filter( 'the_content', array( $this, 'remove_twitter_script_content' ) );
         add_filter( 'plugin_action_links_tembeds/index.php', array( $this, 'settings_page_link' ) );
     }
 
@@ -112,6 +113,12 @@ class FTF_Alt_Embed_Tweet {
         }
 
         wp_enqueue_style( 'ftf-ate-frontend-styles', $css_url, array(), filemtime( $css_path ) );
+    }
+
+    function search_replace_twitter_script( $content ){
+        $content = str_replace( '<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>', '', $content );
+        $content = str_replace( '<script async src=\"https:\/\/platform.twitter.com\/widgets.js\" charset=\"utf-8\"><\/script>', '', $content );
+        return $content;
     }
 
     function embed_tweet(){
@@ -291,13 +298,22 @@ class FTF_Alt_Embed_Tweet {
         wp_send_json( $site_data );
     }
 
-    function remove_twitter_script( $block_content, $block ) {
+    function remove_twitter_script_block( $block_content, $block ) {
         if ( strpos( $block_content, 'platform.twitter.com/widgets.js' ) !== false ) {
-            $block_content = str_replace( '<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>', '', $block_content );
-            $block_content = str_replace( '<script async src=\"https:\/\/platform.twitter.com\/widgets.js\" charset=\"utf-8\"><\/script>', '', $block_content );
+            $block_content = $this->search_replace_twitter_script( $block_content );
         }
 
         return $block_content;
+    }
+
+    function remove_twitter_script_content( $content ) {
+        if ( is_singular() && in_the_loop() && is_main_query() ) {
+            if ( strpos( $content, 'platform.twitter.com/widgets.js' ) !== false ) {
+                $content = $this->search_replace_twitter_script( $content );
+            }
+        }
+
+        return $content;
     }
 
     function add_settings_page(){
