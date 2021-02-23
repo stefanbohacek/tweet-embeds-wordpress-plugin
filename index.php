@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: fourtonfish
  *
  * @package ftf-alt-embed-tweet
@@ -64,6 +64,61 @@ class FTF_Alt_Embed_Tweet {
             );
 
             $response = wp_remote_get( $api_endpoint, $args );
+        } else {
+            // error_log( print_r( array(
+            //     'token errors' => $token->errors
+            // ), true ) );
+
+            global $wpdb;
+            $charset_collate = $wpdb->get_charset_collate();
+            $table_name = $wpdb->prefix . 'ftf_alt_embed_tweet_error_log';
+
+            $sql = "CREATE TABLE `{$table_name}` (
+                id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                code varchar(10),
+                message varchar(255),
+                label varchar(255),
+                created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+                PRIMARY KEY (id)
+            ) $charset_collate;";
+
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            dbDelta( $sql );
+            $success = empty( $wpdb->last_error );
+
+            foreach ( $token->errors as $error ) {
+                $wpdb->insert( $table_name, array(
+                    'code' => $error->code,
+                    'message' => $error->message,
+                    'label' => $error->label,
+                    'created_at' => current_time( 'mysql' ),
+                ), array(
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                ) );
+            }
+
+            $error_log = $wpdb->get_results( "SELECT * FROM $table_name" );
+
+            // error_log( print_r( array(
+            //     'error_log' => $error_log
+            // ), true ) );
+
+            if ( count( $error_log ) > 10 ){
+                $sql = "";
+
+                $wpdb->query( 
+                    $wpdb->prepare( 
+                        "
+                            DELETE FROM $table_name
+                            WHERE id < %d
+                        ",
+                        $error_log[ count( $error_log ) - 10 ]->id
+                    )
+                );
+            }
         }
 
         return $response['body'];
@@ -240,50 +295,56 @@ class FTF_Alt_Embed_Tweet {
         $cache_key = 'site_data:' . $site_url;
         $site_data = wp_cache_get( $cache_key, 'ftf_alt_embed_tweet' );
 
+        $image = '';
+        $title = '';
+        $description = '';
+
         if ( $site_data === false ){
             $site_html = file_get_html( $site_url );
 
-            $meta_image = $site_html->find( 'meta[name="twitter:image"]' );
+            if ( $site_html ){
+                $meta_image = $site_html->find( 'meta[name="twitter:image"]' );
 
-            if ( !empty( $meta_image ) ){
-                $image = $meta_image[0]->content;
-            } else {
-                $meta_image = $site_html->find( 'meta[property="og:image"]' );
-                $image = $meta_image[0]->content;
-            }
+                if ( !empty( $meta_image ) ){
+                    $image = $meta_image[0]->content;
+                } else {
+                    $meta_image = $site_html->find( 'meta[property="og:image"]' );
+                    $image = $meta_image[0]->content;
+                }
 
-            $meta_title = $site_html->find( 'meta[name="title"]' );
-
-            if ( !empty( $meta_title ) ){
-                $title = $meta_title[0]->content;
-            } else {
-                $meta_title = $site_html->find( 'meta[name="twitter:title"]' );
+                $meta_title = $site_html->find( 'meta[name="title"]' );
 
                 if ( !empty( $meta_title ) ){
                     $title = $meta_title[0]->content;
                 } else {
-                    $meta_title = $site_html->find( 'meta[property="og:title"]' );
-                    $title = $meta_title[0]->content;
+                    $meta_title = $site_html->find( 'meta[name="twitter:title"]' );
+
+                    if ( !empty( $meta_title ) ){
+                        $title = $meta_title[0]->content;
+                    } else {
+                        $meta_title = $site_html->find( 'meta[property="og:title"]' );
+                        $title = $meta_title[0]->content;
+                    }
                 }
-            }
 
-            $meta_description = $site_html->find( 'meta[name="description"]' );
-
-            if ( !empty( $meta_description ) ){
-                $description = $meta_description[0]->content;
-            } else {
-                $meta_description = $site_html->find( 'meta[name="twitter:title"]' );
+                $meta_description = $site_html->find( 'meta[name="description"]' );
 
                 if ( !empty( $meta_description ) ){
                     $description = $meta_description[0]->content;
                 } else {
-                    $meta_description = $site_html->find( 'meta[property="og:title"]' );
-                    $description = $meta_description[0]->content;
+                    $meta_description = $site_html->find( 'meta[name="twitter:title"]' );
+
+                    if ( !empty( $meta_description ) ){
+                        $description = $meta_description[0]->content;
+                    } else {
+                        $meta_description = $site_html->find( 'meta[property="og:title"]' );
+                        $description = $meta_description[0]->content;
+                    }
+
                 }
 
+                $description = $meta_description[0]->content;
             }
-
-            $description = $meta_description[0]->content;
 
             $site_data = array(
                 'url' => $site_url,
@@ -511,6 +572,41 @@ class FTF_Alt_Embed_Tweet {
 -->
             </tbody>
         </table>
+        <h3 id="error-log">Error log</h3>
+            <?php
+                global $wpdb;
+                $table_name = $wpdb->prefix . 'ftf_alt_embed_tweet_error_log';
+                $error_log = $wpdb->get_results( "SELECT * FROM $table_name" );
+
+                // error_log( print_r( array(
+                //     'error_log' => $error_log
+                // ), true ) );
+
+                if ( $error_log ){ ?>
+                    <details>
+                    <summary>Click to view error log</summary>
+                    <table class="widefat">
+                        <tr>
+                            <th>Code</th>
+                            <th>Message</th>
+                            <th>Label</th>
+                            <th>Date</th>
+                        </tr>
+                        <?php
+                        foreach ( $error_log as $log_item ) { ?>
+                            <tr>
+                                <td><?php echo $log_item->code; ?></td>
+                                <td><?php echo $log_item->message; ?></td>
+                                <td><?php echo $log_item->label; ?></td>
+                                <td><?php echo $log_item->created_at; ?></td>
+                            </tr>
+                        <?php } ?>
+                        </table>
+                    </details>
+                <?php } else { ?>
+                    <p>There are no errors to display.</p>
+                <?php }
+            ?>
     <?php }    
 
     function settings_page_link( $links ){
