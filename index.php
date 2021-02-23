@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: fourtonfish
  *
  * @package ftf-alt-embed-tweet
@@ -68,57 +68,7 @@ class FTF_Alt_Embed_Tweet {
             // error_log( print_r( array(
             //     'token errors' => $token->errors
             // ), true ) );
-
-            global $wpdb;
-            $charset_collate = $wpdb->get_charset_collate();
-            $table_name = $wpdb->prefix . 'ftf_alt_embed_tweet_error_log';
-
-            $sql = "CREATE TABLE `{$table_name}` (
-                id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                code varchar(10),
-                message varchar(255),
-                label varchar(255),
-                created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-                PRIMARY KEY (id)
-            ) $charset_collate;";
-
-            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-            dbDelta( $sql );
-            $success = empty( $wpdb->last_error );
-
-            foreach ( $token->errors as $error ) {
-                $wpdb->insert( $table_name, array(
-                    'code' => $error->code,
-                    'message' => $error->message,
-                    'label' => $error->label,
-                    'created_at' => current_time( 'mysql' ),
-                ), array(
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                ) );
-            }
-
-            $error_log = $wpdb->get_results( "SELECT * FROM $table_name" );
-
-            // error_log( print_r( array(
-            //     'error_log' => $error_log
-            // ), true ) );
-
-            if ( count( $error_log ) > 10 ){
-                $sql = "";
-
-                $wpdb->query( 
-                    $wpdb->prepare( 
-                        "
-                            DELETE FROM $table_name
-                            WHERE id < %d
-                        ",
-                        $error_log[ count( $error_log ) - 10 ]->id
-                    )
-                );
-            }
+            $this->update_error_log( $token->errors );
         }
 
         return $response['body'];
@@ -145,8 +95,6 @@ class FTF_Alt_Embed_Tweet {
         if ( empty( $twitter_api_consumer_key ) || empty( $twitter_api_consumer_secret ) || empty( $twitter_api_oauth_access_token ) || empty( $twitter_api_oauth_access_token_secret ) ){
             $use_api = false;
         }
-
-        // $use_api = false;
 
         wp_register_script( 'ftf-ate-frontend-js', $js_url, array(), filemtime( $js_path ), true );
         wp_localize_script( 'ftf-ate-frontend-js', 'ftf_aet', array(
@@ -621,6 +569,65 @@ class FTF_Alt_Embed_Tweet {
             $settings_link
         );
         return $links;
+    }
+
+    function create_error_log_table(){
+        global $wpdb;
+        $charset_collate = $wpdb->get_charset_collate();
+        $table_name = $wpdb->prefix . 'ftf_alt_embed_tweet_error_log';
+
+        $sql = "CREATE TABLE `{$table_name}` (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            code varchar(10),
+            message varchar(255),
+            label varchar(255),
+            created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta( $sql );
+        return empty( $wpdb->last_error );
+    }
+
+    function update_error_log( $errors ){
+        $this->create_error_log_table();
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'ftf_alt_embed_tweet_error_log';
+
+        foreach ( $errors as $error ) {
+            $wpdb->insert( $table_name, array(
+                'code' => $error->code,
+                'message' => $error->message,
+                'label' => $error->label,
+                'created_at' => current_time( 'mysql' ),
+            ), array(
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+            ) );
+        }
+
+        $error_log = $wpdb->get_results( "SELECT * FROM $table_name" );
+
+        // error_log( print_r( array(
+        //     'error_log' => $error_log
+        // ), true ) );
+
+        if ( count( $error_log ) > 10 ){
+            $sql = "";
+
+            $wpdb->query( 
+                $wpdb->prepare( 
+                    "
+                        DELETE FROM $table_name
+                        WHERE id < %d
+                    ",
+                    $error_log[ count( $error_log ) - 10 ]->id
+                )
+            );
+        }        
     }
 }
 
