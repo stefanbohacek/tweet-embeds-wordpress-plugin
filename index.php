@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.10
+ * Version: 1.0.11
  * Author: fourtonfish
  * Text Domain: tembeds
  *
@@ -66,9 +66,9 @@ class FTF_Alt_Embed_Tweet {
 
             $response = wp_remote_get( $api_endpoint, $args );
         } else {
-            error_log( print_r( array(
-                'token errors' => $token->errors
-            ), true ) );
+            // error_log( print_r( array(
+            //     'token errors' => $token->errors
+            // ), true ) );
             $this->update_error_log( $token->errors );
         }
 
@@ -182,9 +182,9 @@ class FTF_Alt_Embed_Tweet {
 
                     $response = self::call_twitter_api(  'tweets?' . str_replace( '%2C', ',', http_build_query( $post_fields ) ) );
 
-                    error_log( print_r( array(
-                        'Twitter API response' => $response
-                    ), true ) );
+                    // error_log( print_r( array(
+                    //     'Twitter API response' => $response
+                    // ), true ) );
 
                     $response_array = json_decode( rtrim($response, "\0") );
                     $tweet_data = array();
