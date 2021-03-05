@@ -4,6 +4,10 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
     max-width: 640px;
 
+    .card-text{
+        position: relative;
+    }
+
     .card-footer{
         border-top: none !important;
         background: #fff !important;
