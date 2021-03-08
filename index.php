@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.12
+ * Version: 1.0.13
  * Author: fourtonfish
  * Text Domain: tembeds
  *
@@ -401,7 +401,7 @@ class FTF_Alt_Embed_Tweet {
 
         <h3 id="settings-twitter-api-keys">Twitter API keys</h3>
         <?php if ( empty( $twitter_api_consumer_key ) || empty( $twitter_api_consumer_secret ) || empty( $twitter_api_oauth_access_token ) || empty( $twitter_api_oauth_access_token_secret ) ){ ?>
-            <p>To show the number of likes and retweets and include images and GIFs in Tweets, you need to sign up for a Twitter developer account and add your API keys below.</p>
+            <p>To show the number of likes and retweets and include images and GIFs in Tweets, you need to sign up for a Twitter developer account and add your API keys below. Be sure to use the v2 of the API. (<a target="_blank" href="https://developer.twitter.com/en/docs/twitter-api/migrate">See migration guide</a>.)</p>
             <!-- <p><a class="button" href="https://botwiki.org/tutorials/how-to-create-a-twitter-app/" target="_blank">See how</a></p> -->
             <p><a class="button" href="https://developer.twitter.com/en/apps" target="_blank">Open Twitter developer dashboard</a></p>
         <?php } else { ?>
@@ -498,7 +498,7 @@ class FTF_Alt_Embed_Tweet {
                     <td>
                         <input type="checkbox" <?php checked( $include_bootstrap_styles, 'on' ); ?> name="ftf_alt_embed_tweet_include_bootstrap_styles" id="ftf-alt-include-bootstrap-styles">
                         <p class="description">
-                            If you use <a href="https://getbootstrap.com/" target="_blank">Bootstrap (version 4)</a> on your site, you can uncheck this. Otherwise a slimmed-down version of the Bootstrap CSS library will be loaded and only applied to the embedded Tweets.
+                            If you use the full non-customized version of <a href="https://getbootstrap.com/" target="_blank">Bootstrap 4</a> on your site, you can uncheck this. Otherwise a slimmed-down version of the Bootstrap CSS library will be loaded and only applied to the embedded Tweets.
                         </p>
                     </td>
                 </tr>
