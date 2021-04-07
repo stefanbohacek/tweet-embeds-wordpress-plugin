@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.13
+ * Version: 1.0.14
  * Author: fourtonfish
  * Text Domain: tembeds
  *

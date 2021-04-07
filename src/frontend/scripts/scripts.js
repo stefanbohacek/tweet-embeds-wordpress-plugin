@@ -334,9 +334,8 @@ const ftfHelpers = {
         if ( !container ){
             if ( ftf_aet.config.show_metrics && data.public_metrics ){
                 renderedTweetHTML += `
-                    🔁 <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.retweet_count.toLocaleString() }</a> |
-                    ❤️ <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.like_count.toLocaleString() }</a> | `;
-
+                    <span class="tweet-icon">🔁</span><a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.retweet_count.toLocaleString() }</a> |
+                    <span class="tweet-icon">❤️</span> <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.like_count.toLocaleString() }</a> | `;
             }
                         
             renderedTweetHTML += `<a class="text-muted" href="${ tweetUrl }" target="_blank">${ tweetDate }</a>`;

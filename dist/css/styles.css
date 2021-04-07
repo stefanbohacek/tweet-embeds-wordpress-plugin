@@ -96,3 +96,5 @@
     height: 300px !important;
     -o-object-fit: cover !important;
        object-fit: cover !important; }
+  .twitter-tweet.twitter-tweet-rendered .tweet-icon {
+    margin-right: 5px; }
