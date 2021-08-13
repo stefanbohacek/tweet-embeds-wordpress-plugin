@@ -3,7 +3,7 @@
  * Plugin Name: TEmbeds
  * Plugin URI: https://github.com/fourtonfish/tweet-embeds-wordpress-plugin
  * Description: Embed Tweets without compromising your users' privacy and your site's performance.
- * Version: 1.0.15
+ * Version: 1.0.16
  * Author: fourtonfish
  * Text Domain: tembeds
  *
@@ -202,7 +202,7 @@ class FTF_Alt_Embed_Tweet {
                         
                         $tweet->media = array();
 
-                        if ( array_key_exists( 'attachments', $tweet ) && array_key_exists( 'media_keys', $tweet->attachments ) ){
+                        if ( property_exists( $tweet, 'attachments' ) && property_exists( $tweet->attachments, 'media_keys' ) ){
                             foreach ( $tweet->attachments->media_keys as $media_key ) {
                                 foreach( $response_array->includes->media as $media ){
                                     if ( $media_key === $media->media_key ){
@@ -215,7 +215,7 @@ class FTF_Alt_Embed_Tweet {
 
                         $tweet->polls = array();
 
-                        if ( array_key_exists( 'attachments', $tweet ) && array_key_exists( 'poll_ids', $tweet->attachments ) ){
+                        if ( property_exists( $tweet, 'attachments' ) && property_exists( $tweet->attachments, 'poll_ids' ) ){
                             foreach ( $tweet->attachments->poll_ids as $poll_id ) {
                                 foreach( $response_array->includes->polls as $poll ){
                                     if ( $poll_id === $poll->id ){
