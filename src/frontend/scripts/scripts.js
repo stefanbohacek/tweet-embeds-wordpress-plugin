@@ -275,11 +275,11 @@ window.ftfHelpers.renderTweet = function( data, container ){
             if ( media.type === 'animated_gif' ){
                 tweetText += `<video class="w-100 mt-0" controls loop><source src="${ media.preview_image_url.replace( 'pbs.twimg.com/tweet_video_thumb', 'video.twimg.com/tweet_video' ).replace( '.jpg', '.mp4').replace( '.png', '.mp4') }" type="video/mp4"></video>`
             } else if ( media.type === 'video' ){
-                /* TODO: Video URLs not being passed in Twitter API v2.
-                   https://twittercommunity.com/t/how-do-i-get-the-video-url-in-recent-search/141896
-                */
-                tweetText += `<a class="tweet-video-placeholder" href="${ tweetUrl }" target="_blank"><img alt="Video preview image" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.preview_image_url }"></a>`;
-
+                if ( media.variants ){
+                    tweetText += `<video class="w-100 mt-0" controls loop><source src="${ media.variants[media.variants.length-1].url }" type="${ media.variants[media.variants.length-1].content_type }"></video>`
+                } else {
+                    tweetText += `<a class="tweet-video-placeholder" href="${ tweetUrl }" target="_blank"><img alt="Video preview image" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.preview_image_url }"></a>`;
+                }
             } else if ( media.type === 'photo' ){
                 tweetText += `<a href="${ tweetUrl }" target="_blank"><img alt="${ media.alt_text }" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.url }"></a>`;
             }
