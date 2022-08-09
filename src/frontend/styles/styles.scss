@@ -4,9 +4,19 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
     max-width: 640px;
 
-    .card-text{
-        position: relative;
+    .card-body{
+        line-height: 1.1rem;
+        
+        .card-title,
+        .card-subtitle,
+        .stretched-link{
+            font-size: 1rem;
+        }        
     }
+
+    // .card-text{
+    //     position: relative;
+    // }
 
     .card-footer{
         border-top: none !important;
