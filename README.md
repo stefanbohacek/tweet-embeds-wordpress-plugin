@@ -31,6 +31,15 @@ document.addEventListener( 'tembeds_tweets_processed', function( ev ){
 }, false );
 ```
 
+Here's an example using jQuery.
+
+```js
+$( document ).on( 'tembeds_tweets_processed', function(){
+  const $tweets = $( '.twitter-tweet' );
+  console.log( 'tweets are ready', $tweets );
+} );
+```
+
 ## Development
 
 ```sh
