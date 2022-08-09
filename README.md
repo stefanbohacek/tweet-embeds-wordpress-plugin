@@ -26,9 +26,10 @@ If you need to process tweets that are added to the page dynamically, use the `f
 If you need to perform an action after all tweets on the page are processed, add a listener for the `tembeds_tweets_processed` event.
 
 ```js
-document.addEventListener( 'tembeds_tweets_processed', function( ev ){
-    console.log( 'tweets were processed' );
-}, false );
+document .addEventListener( 'tembeds_tweets_processed', function(){
+  const tweets = document.querySelectorAll( '.twitter-tweet' );
+  console.log( 'tweets are ready', tweets );    
+} );
 ```
 
 Here's an example using jQuery.
