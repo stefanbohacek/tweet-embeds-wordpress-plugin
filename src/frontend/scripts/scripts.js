@@ -113,20 +113,21 @@ window.ftfHelpers.processTweets = function(){
                                 let urlAttachmentPreviewHTML = '';
 
                                 if ( data.image ){
-                                    urlAttachmentPreviewHTML += `<img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="Preview image for ${tweet.dataset.urlAttachment}">`;
+                                    urlAttachmentPreviewHTML += `<a href="${ tweet.dataset.urlAttachment }"><img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="Preview image for ${tweet.dataset.urlAttachment}"></a>`;
                                 }
 
                                 urlAttachmentPreviewHTML += `<div class="card-body">`;
+                                urlAttachmentPreviewHTML += `<p class="card-text"><a class="stretched-link text-muted" href="${ tweet.dataset.urlAttachment }" target="_blank">${ tmpAnchor.hostname }</a></p>`;
 
                                 if ( data.title ){
-                                    urlAttachmentPreviewHTML += `<h5 class="card-title">${ data.title }</h5>`;
+                                    urlAttachmentPreviewHTML += `<p class="card-title">${ data.title }</p>`;
                                 }
 
                                 if ( data.description ){
-                                    urlAttachmentPreviewHTML += `<h6 class="card-subtitle mb-2 text-muted">${ data.description }</h6>`;
+                                    urlAttachmentPreviewHTML += `<p class="card-subtitle mb-2 text-muted">${ data.description }</p>`;
                                 }
 
-                                urlAttachmentPreviewHTML += `<p class="card-text">🔗 <a class="stretched-link text-muted" href="${ tweet.dataset.urlAttachment }" target="_blank">${ tmpAnchor.hostname }</a></p></div>`;
+                                urlAttachmentPreviewHTML += `</div>`;
 
                                 urlAttachmentPreview.innerHTML = urlAttachmentPreviewHTML;
                                 tweet.querySelector( '.tweet-body-wrapper' ).appendChild( urlAttachmentPreview );
@@ -341,8 +342,8 @@ window.ftfHelpers.renderTweet = function( data, container ){
     if ( !container ){
         if ( ftf_aet.config.show_metrics && data.public_metrics ){
             renderedTweetHTML += `
-                <span class="tweet-icon">🔁</span><a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.retweet_count.toLocaleString() }</a> |
-                <span class="tweet-icon">❤️</span> <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.like_count.toLocaleString() }</a> | `;
+                <span class="tweet-icon" role="img" aria-label="Retweets">🔁</span><a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.retweet_count.toLocaleString() }</a> |
+                <span class="tweet-icon" role="img" aria-label="Likes">❤️</span> <a class="text-muted" href="${ tweetUrl }" target="_blank">${ data.public_metrics.like_count.toLocaleString() }</a> | `;
         }
                     
         renderedTweetHTML += `<a class="text-muted" href="${ tweetUrl }" target="_blank">${ tweetDate }</a>`;
