@@ -113,7 +113,7 @@ window.ftfHelpers.processTweets = function(){
                                 let urlAttachmentPreviewHTML = '';
 
                                 if ( data.image ){
-                                    urlAttachmentPreviewHTML += `<a href="${ tweet.dataset.urlAttachment }"><img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="${ data.image }" alt="Preview image for ${tweet.dataset.urlAttachment}"></a>`;
+                                    urlAttachmentPreviewHTML += `<a href="${ tweet.dataset.urlAttachment }"><img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="/wp-json/ftf/proxy-media?url=${ data.image }" alt="Preview image for ${tweet.dataset.urlAttachment}"></a>`;
                                 }
 
                                 urlAttachmentPreviewHTML += `<div class="card-body">`;
@@ -217,7 +217,7 @@ window.ftfHelpers.renderTweet = function( data, container ){
 
         if ( data.users[0].profile_image_url ){
             renderedTweetHTML += `<div class="col-2 col-sm-1 col-md-1">
-                <a href="https://twitter.com/${ data.users[0].username }" class="text-decoration-none"><img title="Profile image" alt="Profile image of @${ data.users[0].username }" loading="lazy" class="rounded-circle border" width="48" height="48" src="${ data.users[0].profile_image_url }"></a>
+                <a href="https://twitter.com/${ data.users[0].username }" class="text-decoration-none"><img title="Profile image" alt="Profile image of @${ data.users[0].username }" loading="lazy" class="rounded-circle border" width="48" height="48" src="/wp-json/ftf/proxy-media?url=${ data.users[0].profile_image_url }"></a>
             </div>`;
         }
 
@@ -274,15 +274,15 @@ window.ftfHelpers.renderTweet = function( data, container ){
             }
 
             if ( media.type === 'animated_gif' ){
-                tweetText += `<video class="w-100 mt-0" controls loop><source src="${ media.preview_image_url.replace( 'pbs.twimg.com/tweet_video_thumb', 'video.twimg.com/tweet_video' ).replace( '.jpg', '.mp4').replace( '.png', '.mp4') }" type="video/mp4"></video>`
+                tweetText += `<video class="w-100 mt-0" controls loop><source src="/wp-json/ftf/proxy-media?url=${ media.preview_image_url.replace( 'pbs.twimg.com/tweet_video_thumb', 'video.twimg.com/tweet_video' ).replace( '.jpg', '.mp4').replace( '.png', '.mp4') }" type="video/mp4"></video>`
             } else if ( media.type === 'video' ){
                 if ( media.variants ){
-                    tweetText += `<video class="w-100 mt-0" controls loop><source src="${ media.variants[media.variants.length-1].url }" type="${ media.variants[media.variants.length-1].content_type }"></video>`
+                    tweetText += `<video class="w-100 mt-0" controls loop><source src="/wp-json/ftf/proxy-media?url=${ media.variants[media.variants.length-1].url }" type="${ media.variants[media.variants.length-1].content_type }"></video>`
                 } else {
-                    tweetText += `<a class="tweet-video-placeholder" href="${ tweetUrl }" target="_blank"><img alt="Video preview image" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.preview_image_url }"></a>`;
+                    tweetText += `<a class="tweet-video-placeholder" href="${ tweetUrl }" target="_blank"><img alt="${ media.alt_text || 'Video preview image' }" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="/wp-json/ftf/proxy-media?url=${ media.preview_image_url }"></a>`;
                 }
             } else if ( media.type === 'photo' ){
-                tweetText += `<a href="${ tweetUrl }" target="_blank"><img alt="${ media.alt_text }" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="${ media.url }"></a>`;
+                tweetText += `<a href="${ tweetUrl }" target="_blank"><img alt="${ media.alt_text || '' }" loading="lazy" width="${ media.width }" height="${ media.height }" class="w-100 rounded border" src="/wp-json/ftf/proxy-media?url=${ media.url }"></a>`;
             }
 
             tweetText += '</div>';
