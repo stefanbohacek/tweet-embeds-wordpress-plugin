@@ -1,0 +1,18 @@
+{
+    "name": "stefan-bohacek/tembeds",
+    "description": "Embed tweets without compromising your users' privacy and your site's performance.",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "FTF_TEmbeds\\": "includes/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Stefan Bohacek",
+            "email": "stefan@stefanbohacek.com"
+        }
+    ],
+    "require": {}
+}

@@ -2,9 +2,9 @@
 Contributors: fourtonfish
 Tags: twitter, tweets, embed
 Requires at least: 5.0
-Tested up to: 6.0.1
+Tested up to: 6.1.1
 Stable tag: 1.0.0
-Requires PHP: 5.6
+Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -16,7 +16,7 @@ Embed Tweets without compromising your users' privacy and your site's performanc
 
 You can optionally provide Twitter API keys to show the number of likes and retweets and load images and other media in Tweets.
 
-[Learn more](https://fourtonfish.com/project/tweet-embeds-wordpress-plugin/) | [View source](https://github.com/fourtonfish/tweet-embeds-wordpress-plugin)
+[Learn more](https://stefanbohacek.com/project/tweet-embeds-wordpress-plugin/) | [View source](https://github.com/stefanbohacek/tweet-embeds-wordpress-plugin)
 
 == FAQ and Troubleshooting ==
 
