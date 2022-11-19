@@ -44,8 +44,10 @@ $(document).on('tembeds_tweets_processed', function(){
 ## Development
 
 ```sh
-#install dependencies
+# install dependencies
 npm install
 # build front-end scripts and styles
 gulp
+# when adding new PHP classes inside `includes`
+composer dumpautoload -o 
 ```

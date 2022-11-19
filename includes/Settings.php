@@ -203,7 +203,7 @@ class Settings {
                     </td>
                 </tr>
 -->
-                <!-- <tr>
+                <tr>
                     <th scope="row">
                         <label for="ftf-alt-embed-tweet-archival-mode">Archival Mode (Experimental)</label>
                     </th>
@@ -213,7 +213,7 @@ class Settings {
                             Save data and images in case the original Tweet is deleted. This feature is currently under active development.
                         </p>
                     </td>
-                </tr> -->
+                </tr>
             </tbody>
         </table>
         <h3 id="error-log">Error log</h3>
