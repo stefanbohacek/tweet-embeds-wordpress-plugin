@@ -1,7 +1,7 @@
 <?php
 namespace FTF_TEmbeds;
 
-$dir = plugin_dir_path( __FILE__ );
+$dir = plugin_dir_path(__FILE__);
 
 if (!class_exists('simple_html_dom_node')){
     require_once $dir . 'simple_html_dom.php';

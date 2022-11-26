@@ -2,7 +2,7 @@
 namespace FTF_TEmbeds;
 use FTF_TEmbeds\Helpers;
 
-$dir = plugin_dir_path( __FILE__ );
+$dir = plugin_dir_path(__FILE__);
 
 if (!class_exists('simple_html_dom_node')){
     require_once $dir . 'simple_html_dom.php';
@@ -22,7 +22,7 @@ class Media_Proxy {
             'methods' => \WP_REST_Server::READABLE,
             'permission_callback' => '__return_true',
             'callback' => array($this, 'proxy_media'),
-       ));
+      ));
     }
 
     public function proxy_media(\WP_REST_Request $request){
@@ -35,7 +35,7 @@ class Media_Proxy {
         }
 
         if ($this->archival_mode){
-            $dir = plugin_dir_path( __FILE__ ) . "../$folder_name";
+            $dir = plugin_dir_path(__FILE__) . "../$folder_name";
             $file_name = basename($url);
             $file_path = "$dir/$file_name";
     
@@ -46,12 +46,12 @@ class Media_Proxy {
 
         if ($this->archival_mode && file_exists($file_path)){
     
-            // Helpers::log_this('debug:proxy_media', array(
-            //     'url' => $url,
-            //     'file_name' => $file_name,
-            //     'file_path' => $file_path,
-            //     'file_exists' => 'true',
-            // ));
+            Helpers::log_this('debug:proxy_media', array(
+                'url' => $url,
+                'file_name' => $file_name,
+                'file_path' => $file_path,
+                'file_exists' => 'true',
+           ));
     
             $image_info = getimagesize($file_path);
             header("Content-type: {$image_info['mime']}");
@@ -60,15 +60,16 @@ class Media_Proxy {
         } else {
             $remote_response = wp_remote_get($url);
 
+            Helpers::log_this('debug:proxy_media', array(
+                'url' => $url,
+                'file_name' => $file_name,
+                'remote_response' => $remote_response,
+           ));
+
             if ($this->archival_mode){
                 file_put_contents($file_path, $remote_response['body']);
             }
     
-            // Helpers::log_this('debug:proxy_media', array(
-            //     'url' => $url,
-            //     'file_name' => $file_name,
-            //     'remote_response' => $remote_response,
-            // ));
     
             header('Content-Type: ' . $remote_response['headers']['content-type']);
             echo $remote_response['body'];

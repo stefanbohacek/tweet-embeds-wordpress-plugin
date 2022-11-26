@@ -4,7 +4,7 @@ namespace FTF_TEmbeds;
 use FTF_TEmbeds\Database;
 use FTF_TEmbeds\Helpers;
 
-$dir = plugin_dir_path( __FILE__ );
+$dir = plugin_dir_path(__FILE__);
 
 if (!class_exists('simple_html_dom_node')){
     require_once $dir . 'simple_html_dom.php';
@@ -23,7 +23,7 @@ class Embed_Tweets {
             'twitter_api_consumer_secret' => get_option('ftf_alt_embed_tweet_twitter_api_consumer_secret'),
             'twitter_api_oauth_access_token' => get_option('ftf_alt_embed_tweet_twitter_api_oauth_access_token'),
             'twitter_api_oauth_access_token_secret' => get_option('ftf_alt_embed_tweet_twitter_api_oauth_access_token_secret'),
-        );
+       );
 
         add_action('wp_ajax_ftf_embed_tweet', array($this, 'embed_tweet'), 1000);
         add_action('wp_ajax_nopriv_ftf_embed_tweet', array($this, 'embed_tweet'), 1000);
@@ -33,9 +33,9 @@ class Embed_Tweets {
         $args = array(
             'headers' => array(
                 'Authorization' => 'Basic ' . base64_encode($this->twitter_credentials['twitter_api_consumer_key'] . ':' . $this->twitter_credentials['twitter_api_consumer_secret'])
-           ),
+          ),
             'body' => array('grant_type' => 'client_credentials')
-       );
+      );
 
         $response = wp_remote_post('https://api.twitter.com/oauth2/token', $args);
 
@@ -50,7 +50,7 @@ class Embed_Tweets {
             !empty($this->twitter_credentials['twitter_api_consumer_secret']) &&
             !empty($this->twitter_credentials['twitter_api_oauth_access_token']) &&
             !empty($this->twitter_credentials['twitter_api_oauth_access_token_secret'])
-        ){
+       ){
             $version = '2';
             $api_endpoint = 'https://api.twitter.com/' . $version . '/' . $endpoint;
             $token = self::create_bearer_token();
@@ -60,8 +60,8 @@ class Embed_Tweets {
                 $args = array(
                     'headers' => array(
                         'Authorization' => 'Bearer ' . $token->access_token
-                )
-            );
+               )
+           );
 
                 $response = wp_remote_get($api_endpoint, $args);
                 // error_log(print_r(array(
@@ -109,14 +109,14 @@ class Embed_Tweets {
             'tweet.fields' => 'attachments,entities,author_id,conversation_id,created_at,id,in_reply_to_user_id,lang,referenced_tweets,source,text,public_metrics',
             'user.fields' => 'id,name,username,profile_image_url,verified',
             'media.fields' => 'media_key,preview_image_url,variants,type,url,width,height,alt_text'
-        );
+       );
 
-        $response = self::call_twitter_api( 'tweets?' . str_replace('%2C', ',', http_build_query($post_fields)));
+        $response = self::call_twitter_api('tweets?' . str_replace('%2C', ',', http_build_query($post_fields)));
 
         // Helpers::log_this('debug:get_tweets', array(
         //     'post_fields' => $post_fields,
         //     'response' => $response,
-        // ));
+        //));
 
         $response_array = json_decode(rtrim($response, "\0"));
 
@@ -127,7 +127,7 @@ class Embed_Tweets {
     
                     // Helpers::log_this('debug:tweet_not_found', array(
                     //     'tweet' => $tweet,
-                    // ));
+                    //));
     
                     if ($tweet){
                         $tweet_data[] = json_decode($tweet->tweet_data);
@@ -181,7 +181,7 @@ class Embed_Tweets {
 
         // Helpers::log_this('debug:tweet_data', array(
         //     'tweet_data' => $tweet_data,
-        // ));
+        //));
         
         return $tweet_data;
     }
@@ -212,7 +212,7 @@ class Embed_Tweets {
             label varchar(255),
             created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
             PRIMARY KEY (id)
-       ) $charset_collate;";
+      ) $charset_collate;";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql);
@@ -230,12 +230,12 @@ class Embed_Tweets {
                 'message' => $error->message,
                 'label' => $error->label,
                 'created_at' => current_time('mysql'),
-           ), array(
+          ), array(
                 '%s',
                 '%s',
                 '%s',
                 '%s'
-           ));
+          ));
         }
 
         $error_log = $wpdb->get_results("SELECT * FROM $table_name");
@@ -254,8 +254,8 @@ class Embed_Tweets {
                         WHERE id < %d
                     ",
                     $error_log[ count($error_log) - 10 ]->id
-               )
-           );
+              )
+          );
         }        
     }
 }

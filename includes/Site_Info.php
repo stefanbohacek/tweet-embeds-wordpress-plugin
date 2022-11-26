@@ -1,7 +1,7 @@
 <?php
 namespace FTF_TEmbeds;
 
-$dir = plugin_dir_path( __FILE__ );
+$dir = plugin_dir_path(__FILE__);
 
 if (!class_exists('simple_html_dom_node')){
     require_once $dir . 'simple_html_dom.php';
@@ -80,7 +80,11 @@ class Site_Info {
                 'image' => $image,
                 'title' => $title,
                 'description' => $description
-           );
+          );
+
+            Helpers::log_this('debug:get_site_info', array(
+                'site_data' => $site_data,
+           ));           
 
             wp_cache_set($cache_key, $site_data, 'ftf_alt_embed_tweet', ($cache_expiration * MINUTE_IN_SECONDS));
         }

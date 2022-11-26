@@ -29,11 +29,11 @@ Please make sure your API keys are set up correctly and that you're using the v2
 You can use the `tembeds_tweets_processed` event. Using jQuery as an example, you could do the following:
 
 `
-$( document ).on( 'tembeds_tweets_processed', function(){
-    $( '.twitter-tweet' ).each( function(){
-        let $tweet = $( this );
+$(document).on('tembeds_tweets_processed', function(){
+    $('.twitter-tweet').each(function(){
+        let $tweet = $(this);
         // Now you can do something with each Tweet.
-    } );
-} );
+    });
+});
 
 `
