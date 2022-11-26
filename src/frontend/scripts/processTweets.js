@@ -69,9 +69,9 @@ const processTweets = (fn) => {
                 tmpAnchor.href = tweet.dataset.urlAttachment;
                 
                 let urlAttachmentPreviewHTML = '';
-                
+                console.log('debug:data.image', data.image);
                 if (data.image){
-                  urlAttachmentPreviewHTML += `<a href="${ tweet.dataset.urlAttachment }"><img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="/wp-json/ftf/proxy-media?url=${ data.image }" alt="Preview image for ${tweet.dataset.urlAttachment}"></a>`;
+                  urlAttachmentPreviewHTML += `<a href="${ tweet.dataset.urlAttachment }"><img loading="lazy" class="tweet-attachment-site-thumbnail card-img-top" src="/wp-json/ftf/proxy-media?url=${ encodeURI(data.image) }" alt="Preview image for ${tweet.dataset.urlAttachment}"></a>`;
                 }
                 
                 urlAttachmentPreviewHTML += `<div class="card-body">`;

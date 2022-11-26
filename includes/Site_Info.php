@@ -84,7 +84,7 @@ class Site_Info {
 
             Helpers::log_this('debug:get_site_info', array(
                 'site_data' => $site_data,
-           ));           
+            ));
 
             wp_cache_set($cache_key, $site_data, 'ftf_alt_embed_tweet', ($cache_expiration * MINUTE_IN_SECONDS));
         }
