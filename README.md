@@ -1,3 +1,7 @@
+> [!WARNING]  
+> Twitter is a [nazi bar](https://www.upworthy.com/bartender-explains-why-he-swiftly-kicks-nazis-out-of-his-punk-bar-even-if-theyre-not-bothering-anyone) now and as a result, this project is no longer maintained. Consider [joining the fediverse](https://jointhefediverse.net/) instead, and check out my new [Fediverse Embeds](https://stefanbohacek.com/project/wordpress-plugin-for-fediverse-embeds/) plugin!
+
+
 ![Preview of multiple Tweets embedded with the Tweet Embeds plugin](./images/thumbnail/tweet-embeds-bw-tint.png)
 
 # Tweet Embeds
