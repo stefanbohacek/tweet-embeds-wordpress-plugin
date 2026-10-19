@@ -34,9 +34,9 @@ class Database {
 
         $result = $wpdb->replace($table_name, array('tweet_id' => $tweet_id, 'tweet_data' => $tweet_data), array('%d', '%s'));
 
-        Helpers::log_this('debug:saving tweet to DB', array(
-            'result' => $result,
-       ));
+        // Helpers::log_this('debug:saving tweet to DB', array(
+        //     'result' => $result,
+        // ));
 
         if (!$result){
             // TODO: Check if the error is due to table not existing, otherwise this might create an infinite loop.
@@ -50,9 +50,9 @@ class Database {
         $table_name = $wpdb->prefix . $this->table_name;
         $tweet_data = $wpdb->get_row("SELECT * FROM $table_name WHERE tweet_id = $tweet_id");
 
-        Helpers::log_this('debug:loading tweet from DB', array(
-            'tweet_data' => $tweet_data,
-       ));
+        // Helpers::log_this('debug:loading tweet from DB', array(
+        //     'tweet_data' => $tweet_data,
+        // ));
 
         return $tweet_data;
     }

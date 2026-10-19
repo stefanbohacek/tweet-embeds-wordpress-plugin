@@ -3,7 +3,7 @@ Contributors: fourtonfish
 Tags: twitter, tweets, embed
 Requires at least: 5.0
 Tested up to: 6.1.1
-Stable tag: 1.0.0
+Stable tag: 1.4.0
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -37,3 +37,14 @@ $(document).on('tembeds_tweets_processed', function(){
 });
 
 `
+
+
+== Changelog ==
+
+= 1.4.0 =
+* Security updates.
+
+== Upgrade Notice ==
+
+= 1.4.0 =
+Improves how remote media is handled. Updating is recommended.

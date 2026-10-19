@@ -29,7 +29,16 @@ class Site_Info {
         $description = '';
 
         if ($site_data === false){
-            $site_html = file_get_html($site_url);
+            $site_html = false;
+            $safe_url = wp_http_validate_url(esc_url_raw($site_url, array('http', 'https')));
+
+            if ($safe_url){
+                $page = wp_safe_remote_get($safe_url, array('timeout' => 10, 'limit_response_size' => 2 * 1024 * 1024));
+
+                if (!is_wp_error($page) && 200 === (int) wp_remote_retrieve_response_code($page)){
+                    $site_html = str_get_html(wp_remote_retrieve_body($page));
+                }
+            }
 
             if ($site_html){
                 $meta_image = $site_html->find('meta[name="twitter:image"]');
@@ -82,9 +91,9 @@ class Site_Info {
                 'description' => $description
           );
 
-            Helpers::log_this('debug:get_site_info', array(
-                'site_data' => $site_data,
-            ));
+            // Helpers::log_this('debug:get_site_info', array(
+            //     'site_data' => $site_data,
+            // ));
 
             wp_cache_set($cache_key, $site_data, 'ftf_alt_embed_tweet', ($cache_expiration * MINUTE_IN_SECONDS));
         }

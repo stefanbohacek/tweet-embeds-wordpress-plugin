@@ -10,7 +10,7 @@ const renderTweet = (data, container) => {
   <div class="row no-gutters mb-1">`;
   
   if (data.users[0].profile_image_url){
-    renderedTweetHTML += `<div class="col-2 col-sm-1 col-md-1">
+    renderedTweetHTML += `<div class="col-2 col-sm-1 col-md-1 p-0">
     <a href="https://twitter.com/${ data.users[0].username }" class="text-decoration-none"><img title="Profile image" alt="Profile image of @${ data.users[0].username }" loading="lazy" class="rounded-circle border" width="48" height="48" src="/wp-json/ftf/proxy-media?url=${ data.users[0].profile_image_url }"></a>
     </div>`;
   }

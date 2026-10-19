@@ -83,107 +83,121 @@ class Embed_Tweets {
 
     function get_tweets($tweet_ids){
         $tweet_data = array();
-        $cache_expiration = get_option('ftf_alt_embed_cache_expiration');
-
-        if (empty($cache_expiration)){
-            $cache_expiration = 30;
-        }
-
-        foreach ($tweet_ids as $index => $tweet_id) {
-            if (empty($tweet_id)){
-                unset($tweet_ids[$index]);
-            } else {
-                $cache_key = "tweet_data:" . $tweet_id;
-                $tweet_data = wp_cache_get($cache_key, 'ftf_alt_embed_tweet');
-
-                if ($tweet_data !== false){
-                    unset($tweet_ids[$index]);
-                    $data[] = $tweet_data;
-                }
-            }
-        }
-
-        $post_fields = array(
-            'ids' => implode(',', $tweet_ids),
-            'expansions' => 'author_id,attachments.media_keys,referenced_tweets.id,attachments.poll_ids',
-            'tweet.fields' => 'attachments,entities,author_id,conversation_id,created_at,id,in_reply_to_user_id,lang,referenced_tweets,source,text,public_metrics',
-            'user.fields' => 'id,name,username,profile_image_url,verified',
-            'media.fields' => 'media_key,preview_image_url,variants,type,url,width,height,alt_text'
-       );
-
-        $response = self::call_twitter_api('tweets?' . str_replace('%2C', ',', http_build_query($post_fields)));
-
-        // Helpers::log_this('debug:get_tweets', array(
-        //     'post_fields' => $post_fields,
-        //     'response' => $response,
-        //));
-
-        $response_array = json_decode(rtrim($response, "\0"));
 
         if ($this->archival_mode){
-            foreach ($response_array->errors as $error) {
-                if ($error->title === 'Not Found Error'){
-                    $tweet = $this->db->get_tweet($error->resource_id);
-    
-                    // Helpers::log_this('debug:tweet_not_found', array(
-                    //     'tweet' => $tweet,
-                    //));
-    
+
+            foreach ($tweet_ids as $index => $tweet_id) {
+                if (!empty($tweet_id)){
+                    $tweet = $this->db->get_tweet($tweet_id);
                     if ($tweet){
                         $tweet_data[] = json_decode($tweet->tweet_data);
                     }
                 }
             }
-        }
+            return $tweet_data;
+        } else {
+            $cache_expiration = get_option('ftf_alt_embed_cache_expiration');
 
-        foreach ($response_array->data as $tweet) {
-            $tweet->users = array();
-
-            foreach($response_array->includes->users as $user){
-                if ($tweet->author_id === $user->id){
-                    $tweet->users[] = $user;
-                }
+            if (empty($cache_expiration)){
+                $cache_expiration = 30;
             }
-            
-            $tweet->media = array();
-
-            if (property_exists($tweet, 'attachments') && property_exists($tweet->attachments, 'media_keys')){
-                foreach ($tweet->attachments->media_keys as $media_key) {
-                    foreach($response_array->includes->media as $media){
-                        if ($media_key === $media->media_key){
-                            $tweet->media[] = $media;
-                        }
+    
+            foreach ($tweet_ids as $index => $tweet_id) {
+                if (empty($tweet_id)){
+                    unset($tweet_ids[$index]);
+                } else {
+                    $cache_key = "tweet_data:" . $tweet_id;
+                    $tweet_data = wp_cache_get($cache_key, 'ftf_alt_embed_tweet');
+    
+                    if ($tweet_data !== false){
+                        unset($tweet_ids[$index]);
+                        $data[] = $tweet_data;
                     }
                 }
             }
-
-            $tweet->polls = array();
-
-            if (property_exists($tweet, 'attachments') && property_exists($tweet->attachments, 'poll_ids')){
-                foreach ($tweet->attachments->poll_ids as $poll_id) {
-                    foreach($response_array->includes->polls as $poll){
-                        if ($poll_id === $poll->id){
-                            $tweet->polls[] = $poll;
-                        }
-                    }
-                }
-            }
-
-            $cache_key = "tweet_data:" . $tweet->id;
-            wp_cache_set($cache_key, $tweet, 'ftf_alt_embed_tweet', ($cache_expiration * MINUTE_IN_SECONDS));
-
+    
+            $post_fields = array(
+                'ids' => implode(',', $tweet_ids),
+                'expansions' => 'author_id,attachments.media_keys,referenced_tweets.id,attachments.poll_ids',
+                'tweet.fields' => 'attachments,entities,author_id,conversation_id,created_at,id,in_reply_to_user_id,lang,referenced_tweets,source,text,public_metrics',
+                'user.fields' => 'id,name,username,profile_image_url,verified',
+                'media.fields' => 'media_key,preview_image_url,variants,type,url,width,height,alt_text'
+           );
+    
+            $response = self::call_twitter_api('tweets?' . str_replace('%2C', ',', http_build_query($post_fields)));
+    
+            // Helpers::log_this('debug:get_tweets', array(
+            //     'post_fields' => $post_fields,
+            //     'response' => $response,
+            //));
+    
+            $response_array = json_decode(rtrim($response, "\0"));
+    
             if ($this->archival_mode){
-                $this->db->add_tweet($tweet->conversation_id, json_encode($tweet));
-            }
-
-            $tweet_data[] = $tweet;
-        }
-
-        // Helpers::log_this('debug:tweet_data', array(
-        //     'tweet_data' => $tweet_data,
-        //));
+                foreach ($response_array->errors as $error) {
+                    if ($error->title === 'Not Found Error'){
+                        $tweet = $this->db->get_tweet($error->resource_id);
         
-        return $tweet_data;
+                        // Helpers::log_this('debug:tweet_not_found', array(
+                        //     'tweet' => $tweet,
+                        //));
+        
+                        if ($tweet){
+                            $tweet_data[] = json_decode($tweet->tweet_data);
+                        }
+                    }
+                }
+            }
+    
+            foreach ($response_array->data as $tweet) {
+                $tweet->users = array();
+    
+                foreach($response_array->includes->users as $user){
+                    if ($tweet->author_id === $user->id){
+                        $tweet->users[] = $user;
+                    }
+                }
+                
+                $tweet->media = array();
+    
+                if (property_exists($tweet, 'attachments') && property_exists($tweet->attachments, 'media_keys')){
+                    foreach ($tweet->attachments->media_keys as $media_key) {
+                        foreach($response_array->includes->media as $media){
+                            if ($media_key === $media->media_key){
+                                $tweet->media[] = $media;
+                            }
+                        }
+                    }
+                }
+    
+                $tweet->polls = array();
+    
+                if (property_exists($tweet, 'attachments') && property_exists($tweet->attachments, 'poll_ids')){
+                    foreach ($tweet->attachments->poll_ids as $poll_id) {
+                        foreach($response_array->includes->polls as $poll){
+                            if ($poll_id === $poll->id){
+                                $tweet->polls[] = $poll;
+                            }
+                        }
+                    }
+                }
+    
+                $cache_key = "tweet_data:" . $tweet->id;
+                wp_cache_set($cache_key, $tweet, 'ftf_alt_embed_tweet', ($cache_expiration * MINUTE_IN_SECONDS));
+    
+                if ($this->archival_mode){
+                    $this->db->add_tweet($tweet->conversation_id, json_encode($tweet));
+                }
+    
+                $tweet_data[] = $tweet;
+            }
+    
+            // Helpers::log_this('debug:tweet_data', array(
+            //     'tweet_data' => $tweet_data,
+            //));
+            
+            return $tweet_data;
+        }
     }
 
     function embed_tweet(){
